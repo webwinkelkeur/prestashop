@@ -109,6 +109,28 @@ class Webwinkelkeur extends Module {
                 AND os.shipped = 1
         ");
 
+        if($query === false)
+            $query = $db->executeS("
+                SELECT
+                    o.*,
+                    c.email
+                FROM `" . _DB_PREFIX_ . "orders` o
+                INNER JOIN `" . _DB_PREFIX_ . "order_history` oh ON
+                    oh.id_order = o.id_order
+                INNER JOIN `" . _DB_PREFIX_ . "order_state` os ON
+                    os.id_order_state = oh.id_order_state
+                INNER JOIN `" . _DB_PREFIX_ . "order_state_lang` osl ON
+                    osl.id_order_state = osl.id_order_state
+                INNER JOIN `" . _DB_PREFIX_ . "customer` c USING (id_customer)
+                WHERE
+                    o.webwinkelkeur_invite_sent = 0
+                    AND o.webwinkelkeur_invite_tries < 10
+                    AND o.webwinkelkeur_invite_time < $max_time
+                    AND osl.template = 'shipped'
+                GROUP BY
+                    o.id_order
+            ");
+
         return $query;
     }
 
@@ -124,8 +146,11 @@ class Webwinkelkeur extends Module {
 
         $orders = $this->getOrdersToInvite($db);
 
+        if(!$orders)
+            return;
+
         foreach($orders as $order) {
-            $db->query("
+            $db->execute("
                 UPDATE `" . _DB_PREFIX_ . "orders`
                 SET
                     webwinkelkeur_invite_tries = webwinkelkeur_invite_tries + 1,
@@ -150,7 +175,7 @@ class Webwinkelkeur extends Module {
                 ) {
                     $db->execute("UPDATE `" . _DB_PREFIX_ . "orders` SET webwinkelkeur_invite_sent = 1 WHERE id_order = " . (int) $order['id_order']);
                 } else {
-                    $db->execute("INSERT INTO `" . _DB_PREFIX_ . "webwinkelkeur_invite_error` SET url = '" . $db->escape($url, true) . "', response = '" . $db->escape($response, true) . "', time = " . time());
+                    $db->execute("INSERT INTO `" . _DB_PREFIX_ . "webwinkelkeur_invite_error` SET url = '" . pSQL($url, true) . "', response = '" . pSQL($response, true) . "', time = " . time());
                 }
             }
         }
