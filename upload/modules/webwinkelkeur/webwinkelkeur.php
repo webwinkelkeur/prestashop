@@ -6,8 +6,8 @@ if(!defined('_PS_VERSION_'))
 class Webwinkelkeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
-        $this->tab = 'Webwinkelkeur';
-        $this->version = 1.0;
+        $this->tab = 'advertising_marketing';
+        $this->version = '1.0.0';
         $this->author = 'Albert Peschar';
         $this->need_instance = 0;
 
