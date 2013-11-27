@@ -51,7 +51,7 @@ class Webwinkelkeur extends Module {
               `time` bigint NOT NULL,
               PRIMARY KEY (`id`),
               KEY `time` (`time`)
-            ) ENGINE=InnoDB
+            ) ENGINE=MyISAM
         ");
         Db::getInstance()->execute("
             DELETE FROM `" . _DB_PREFIX_ . "webwinkelkeur_invite_error`
