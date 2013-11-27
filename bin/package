@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eu
+
+cd `dirname "$0"`
+cd ..
+
+rm -rf dist
+mkdir -p dist
+
+zip -r7 dist/prestashop-webwinkelkeur.zip README.txt `git ls-files upload`
