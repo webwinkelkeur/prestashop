@@ -16,7 +16,7 @@ ontwikkelaar. Neem daarvoor per e-mail contact op.
 Installatieinstructies
 ----------------------
 
-    1. Upload de bestanden in de map src/ naar de webserver.
+    1. Upload de bestanden in de map upload/ naar de webserver.
 
     2. De module kan nu worden geïnstalleerd in de administratieinterface.
 
