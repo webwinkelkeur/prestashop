@@ -7,9 +7,6 @@ installatieinstructies.
 
 De module is getest met PrestaShop versies 1.4 en 1.5.
 
-U kunt de module tegen een kleine vergoeding ook laten installeren door de
-ontwikkelaar. Neem daarvoor per e-mail contact op.
-
 (C) 2013 Albert Peschar <albert@peschar.net>
 
 
