@@ -1,8 +1,8 @@
 WebwinkelKeur PrestaShop module
 ===============================
 
-Deze module integreert de WebwinkelKeur sitebar module in uw webshop. De module 
-kan eenvoudig worden geïnstalleerd. Gebruik daarvoor de onderstaande 
+Deze module integreert de WebwinkelKeur sidebar in uw webshop. De module kan
+eenvoudig worden geïnstalleerd. Gebruik daarvoor de onderstaande
 installatieinstructies.
 
 De module is getest met PrestaShop versies 1.4 en 1.5.
