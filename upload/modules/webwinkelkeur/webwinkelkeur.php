@@ -3,6 +3,8 @@
 if(!defined('_PS_VERSION_'))
     exit;
 
+require_once dirname(__FILE__) . '/vendor/Peschar/URLRetriever.php';
+
 class Webwinkelkeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
@@ -169,7 +171,8 @@ class Webwinkelkeur extends Module {
                     'delay'     => $invite_delay,
                 );
                 $url = 'http://www.webwinkelkeur.nl/api.php?' . http_build_query($parameters);
-                $response = @file_get_contents($url);
+                $retriever = new Peschar_URLRetriever();
+                $response = $retriever->retrieve($url);
                 if(preg_match('|^Success:|', $response)
                    || preg_match('|invite already sent|', $response)
                 ) {
