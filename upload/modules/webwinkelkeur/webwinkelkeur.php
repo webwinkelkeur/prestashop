@@ -189,6 +189,7 @@ class Webwinkelkeur extends Module {
     }
 
     public function getContent() {
+        $db = Db::getInstance();
         $errors = array();
         $success = false;
 
@@ -219,6 +220,14 @@ class Webwinkelkeur extends Module {
             if(sizeof($errors) == 0)
                 $success = true;
         }
+
+        $invite_errors = $db->executeS("
+            SELECT *
+            FROM `" . _DB_PREFIX_ . "webwinkelkeur_invite_error`
+            WHERE
+                time > " . (time() - 86400 * 3) . "
+            ORDER BY time
+        ");
 
         ob_start();
         foreach($errors as $error)

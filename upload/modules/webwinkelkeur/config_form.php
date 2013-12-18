@@ -70,3 +70,25 @@ if(!defined('_PS_VERSION_'))
         </div>
     </fieldset>
 </form>
+
+<?php if($invite_errors): ?>
+<fieldset style="margin-top:1em;">
+    <legend>
+        <?php echo $this->l('Fouten opgetreden bij het versturen van uitnodigingen'); ?>
+    </legend>
+    <table>
+      <?php foreach($invite_errors as $invite_error): ?>
+      <tr>
+        <td style="padding-right:10px;"><?php echo date('d-m-Y H:i', $invite_error['time']); ?></td>
+        <td>
+          <?php if($invite_error['response']): ?>
+          <?php echo htmlentities($invite_error['response'], ENT_QUOTES, 'UTF-8'); ?>
+          <?php else: ?>
+          De Webwinkelkeur-server kon niet worden bereikt.
+          <?php endif; ?>
+        </td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+</fieldset>
+<?php endif; ?>
