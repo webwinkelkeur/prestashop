@@ -1,3 +1,9 @@
 #!/bin/bash
 set -eu
-stow -d `dirname "$0"`/.. -t "$1" upload
+
+if [[ ! -f "$1/config/config.inc.php" ]]; then
+    echo "File not found: $1/config/config.inc.php" >&2
+    exit 1
+fi
+
+stow -v -t "$1" -d `dirname "$0"`/.. upload
