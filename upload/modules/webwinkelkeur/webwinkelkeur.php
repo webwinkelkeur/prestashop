@@ -5,7 +5,7 @@ if(!defined('_PS_VERSION_'))
 
 require_once dirname(__FILE__) . '/vendor/Peschar/URLRetriever.php';
 
-class Webwinkelkeur extends Module {
+class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
@@ -15,8 +15,8 @@ class Webwinkelkeur extends Module {
 
         parent::__construct();
         
-        $this->displayName = $this->l('Webwinkelkeur');
-        $this->description = $this->l('Integreer de Webwinkelkeur sidebar in uw webwinkel.');
+        $this->displayName = $this->l('WebwinkelKeur');
+        $this->description = $this->l('Integreer de WebwinkelKeur sidebar in uw webwinkel.');
     }
 
     public function install() {
@@ -60,7 +60,10 @@ class Webwinkelkeur extends Module {
         ");
 
         Configuration::updateValue('WEBWINKELKEUR_SIDEBAR', '');
+        Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_POSITION', 'left');
         Configuration::updateValue('WEBWINKELKEUR_INVITE', '');
+        Configuration::updateValue('WEBWINKELKEUR_TOOLTIP', '1');
+        Configuration::updateValue('WEBWINKELKEUR_JAVASCRIPT', '1');
 
         return true;
     }
@@ -79,14 +82,30 @@ class Webwinkelkeur extends Module {
     }
 
     public function hookHeader($params) {
-        if(!Configuration::get('WEBWINKELKEUR_SIDEBAR'))
-            return "<!-- Webwinkelkeur: sidebar disabled -->\n";
+        if(!Configuration::get('WEBWINKELKEUR_SIDEBAR')
+           && !Configuration::get('WEBWINKELKEUR_TOOLTIP')
+           && !Configuration::get('WEBWINKELKEUR_JAVASCRIPT')
+        ) {
+            return "<!-- WebwinkelKeur: JS disabled -->\n";
+        }
 
         $shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID');
         if(!$shop_id)
-            return "<!-- Webwinkelkeur: shop_id not set -->\n";
+            return "<!-- WebwinkelKeur: shop_id not set -->\n";
         if(!ctype_digit($shop_id))
-            return "<!-- Webwinkelkeur: shop_id not a number -->\n";
+            return "<!-- WebwinkelKeur: shop_id not a number -->\n";
+
+        $settings = array(
+            '_webwinkelkeur_id' => (int) $shop_id,
+            '_webwinkelkeur_sidebar' => !!Configuration::get('WEBWINKELKEUR_SIDEBAR'),
+            '_webwinkelkeur_tooltip' => !!Configuration::get('WEBWINKELKEUR_TOOLTIP'),
+        );
+
+        if($sidebar_position = Configuration::get('WEBWINKELKEUR_SIDEBAR_POSITION'))
+            $settings['_webwinkelkeur_sidebar_position'] = $sidebar_position;
+
+        if($sidebar_top = Configuration::get('WEBWINKELKEUR_SIDEBAR_TOP'))
+            $settings['_webwinkelkeur_sidebar_top'] = $sidebar_top;
 
         ob_start();
         require dirname(__FILE__) . '/sidebar.php';
@@ -140,9 +159,10 @@ class Webwinkelkeur extends Module {
         if(!($shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID'))
            || !($api_key = Configuration::get('WEBWINKELKEUR_API_KEY'))
            || !($invite = Configuration::get('WEBWINKELKEUR_INVITE'))
-           || !($invite_delay = Configuration::get('WEBWINKELKEUR_INVITE_DELAY'))
         )
             return;
+        
+        $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY');
 
         $db = Db::getInstance();
 
@@ -170,6 +190,8 @@ class Webwinkelkeur extends Module {
                     'order'     => $order['id_order'],
                     'delay'     => $invite_delay,
                 );
+                if($invite == 2)
+                    $parameters['noremail'] = '1';
                 $url = 'http://www.webwinkelkeur.nl/api.php?' . http_build_query($parameters);
                 $retriever = new Peschar_URLRetriever();
                 $response = $retriever->retrieve($url);
@@ -205,17 +227,28 @@ class Webwinkelkeur extends Module {
             if(!$shop_id || !$api_key)
                 $errors[] = $this->l('Om de sidebar weer te geven of uitnodigingen te versturen, zijn uw webwinkel en API key vereist.');
 
-            Configuration::updateValue('WEBWINKELKEUR_SHOP_ID', $shop_id);
-            Configuration::updateValue('WEBWINKELKEUR_API_KEY', $api_key);
+            Configuration::updateValue('WEBWINKELKEUR_SHOP_ID', trim($shop_id));
+            Configuration::updateValue('WEBWINKELKEUR_API_KEY', trim($api_key));
 
             Configuration::updateValue('WEBWINKELKEUR_SIDEBAR',
                 !!tools::getValue('sidebar'));
+            Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_POSITION',
+                tools::getValue('sidebar_position'));
+            Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_TOP',
+                tools::getValue('sidebar_top'));
+
             Configuration::updateValue('WEBWINKELKEUR_INVITE',
-                !!tools::getValue('invite'));
+                (int) tools::getValue('invite'));
+
+            Configuration::updateValue('WEBWINKELKEUR_TOOLTIP',
+                !!tools::getValue('tooltip'));
 
             $invite_delay = tools::getValue('invite_delay');
             if(strlen($invite_delay) == 0) $invite_delay = 3;
             Configuration::updateValue('WEBWINKELKEUR_INVITE_DELAY', (int) $invite_delay);
+
+            Configuration::updateValue('WEBWINKELKEUR_JAVASCRIPT',
+                !!tools::getValue('javascript'));
 
             if(sizeof($errors) == 0)
                 $success = true;
