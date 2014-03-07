@@ -10,7 +10,7 @@ if(!defined('_PS_VERSION_'))
     <fieldset>
         <legend>
             <img width="16" height="16" src="<?=$this->_path;?>/logo.png" />
-            <?=$this->l('WebwinkelKeur instellingen');?>
+            <?=$this->l('eValor instellingen');?>
         </legend>
 
         <label for="adv_link"><?=$this->l('Webwinkel ID');?></label>
@@ -21,7 +21,7 @@ if(!defined('_PS_VERSION_'))
         <label for="adv_link"><?=$this->l('API key');?></label>
         <div class="margin-form">
             <input id="adv_link" type="text" name="api_key" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_API_KEY'));?>" style="width:250px" />
-            <p class="preference_description"><?=$this->l('Deze gegevens vindt u bij uw WebwinkelKeur account.');?></p>
+            <p class="preference_description"><?=$this->l('Deze gegevens vindt u bij uw eValor account.');?></p>
         </div>
         <br class="clear" />
 
@@ -137,7 +137,7 @@ if(!defined('_PS_VERSION_'))
           <?php if($invite_error['response']): ?>
           <?php echo htmlentities($invite_error['response'], ENT_QUOTES, 'UTF-8'); ?>
           <?php else: ?>
-          De WebwinkelKeur-server kon niet worden bereikt.
+          De eValor-server kon niet worden bereikt.
           <?php endif; ?>
         </td>
       </tr>

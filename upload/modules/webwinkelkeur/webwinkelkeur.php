@@ -15,8 +15,8 @@ class WebwinkelKeur extends Module {
 
         parent::__construct();
         
-        $this->displayName = $this->l('WebwinkelKeur');
-        $this->description = $this->l('Integreer de WebwinkelKeur sidebar in uw webwinkel.');
+        $this->displayName = $this->l('eValor');
+        $this->description = $this->l('Integreer de eValor sidebar in uw webwinkel.');
     }
 
     public function install() {
@@ -86,14 +86,14 @@ class WebwinkelKeur extends Module {
            && !Configuration::get('WEBWINKELKEUR_TOOLTIP')
            && !Configuration::get('WEBWINKELKEUR_JAVASCRIPT')
         ) {
-            return "<!-- WebwinkelKeur: JS disabled -->\n";
+            return "<!-- eValor: JS disabled -->\n";
         }
 
         $shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID');
         if(!$shop_id)
-            return "<!-- WebwinkelKeur: shop_id not set -->\n";
+            return "<!-- eValor: shop_id not set -->\n";
         if(!ctype_digit($shop_id))
-            return "<!-- WebwinkelKeur: shop_id not a number -->\n";
+            return "<!-- eValor: shop_id not a number -->\n";
 
         $settings = array(
             '_webwinkelkeur_id' => (int) $shop_id,
@@ -192,7 +192,7 @@ class WebwinkelKeur extends Module {
                 );
                 if($invite == 2)
                     $parameters['noremail'] = '1';
-                $url = 'http://www.webwinkelkeur.nl/api.php?' . http_build_query($parameters);
+                $url = 'http://www.evalor.es/api.php?' . http_build_query($parameters);
                 $retriever = new Peschar_URLRetriever();
                 $response = $retriever->retrieve($url);
                 if(preg_match('|^Success:|', $response)
