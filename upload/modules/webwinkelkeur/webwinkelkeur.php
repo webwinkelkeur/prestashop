@@ -16,7 +16,7 @@ class WebwinkelKeur extends Module {
         parent::__construct();
         
         $this->displayName = $this->l('eValor');
-        $this->description = $this->l('Integreer de eValor sidebar in uw webwinkel.');
+        $this->description = $this->l('Integre el sidebar de eValor en su tienda online.');
     }
 
     public function install() {
@@ -224,8 +224,11 @@ class WebwinkelKeur extends Module {
 
             $api_key = tools::getValue('api_key');
 
-            if(!$shop_id || !$api_key)
-                $errors[] = $this->l('Om de sidebar weer te geven of uitnodigingen te versturen, zijn uw webwinkel en API key vereist.');
+            if(!$shop_id)
+                $errors[] = 'Su ID de tienda es obligatorio.';
+
+            if(tools::getValue('invite') && !$api_key)
+                $errors[] = 'Para enviar invitaciones es obligatoria su clave API.';
 
             Configuration::updateValue('WEBWINKELKEUR_SHOP_ID', trim($shop_id));
             Configuration::updateValue('WEBWINKELKEUR_API_KEY', trim($api_key));
