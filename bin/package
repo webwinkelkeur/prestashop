@@ -7,4 +7,7 @@ cd ..
 rm -rf dist
 mkdir -p dist
 
-zip -r7 dist/prestashop-webwinkelkeur.zip README.txt `git ls-files upload`
+pathspec="README.txt upload"
+
+git archive -o dist/prestashop-webwinkelkeur.zip master $pathspec
+git archive -o dist/prestashop-evalor.zip evalor $pathspec
