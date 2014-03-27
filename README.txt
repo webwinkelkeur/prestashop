@@ -1,22 +1,23 @@
-WebwinkelKeur PrestaShop module
-===============================
+Módulo PrestaShop para eValor
+=============================
 
-Deze module integreert de WebwinkelKeur sidebar in uw webshop. De module kan
-eenvoudig worden geïnstalleerd. Gebruik daarvoor de onderstaande
-installatieinstructies.
+Este módulo integra el módulo sidebar eValor en su tienda online. Este módulo es
+fácil de instalar. Para eso puede utilizar las instrucciones.
 
-De module is getest met PrestaShop versies 1.4 en 1.5.
+Este módulo ha sido optimizado para las versiones 1.4 y 1.5 de PrestaShop.
 
-(C) 2013 Albert Peschar <albert@peschar.net>
+(C) 2014 Albert Peschar <albert@peschar.net>
 
 
-Installatieinstructies
-----------------------
+Instrucciones de instalación
+----------------------------
 
-    1. Upload de bestanden in de map upload/ naar de webserver.
+    1. Suba los ficheros de la carpeta upload al servidor web.
 
-    2. De module kan nu worden geïnstalleerd in de administratieinterface.
+    2. El módulo ahora se puede activar en su panel de control de PrestaShop.
 
-    3. Vul uw webwinkel ID en API key in en configureer de module.
+    3. Introduzca el número ID de su tienda online y el código API y configure
+    el módulo.
 
-    4. Controleer of de sidebar op uw site wordt getoond.
+    4. Comprueba si el sidebar se muestra en su web. 
+
