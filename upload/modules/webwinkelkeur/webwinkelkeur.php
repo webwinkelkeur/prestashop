@@ -269,7 +269,7 @@ class WebwinkelKeur extends Module {
         foreach($errors as $error)
             echo $this->displayError($error);
         if($success)
-            echo $this->displayConfirmation($this->l('Uw wijzigingen zijn opgeslagen.'));
+            echo $this->displayConfirmation($this->l('Sus cambios han sido guard dos.'));
         require dirname(__FILE__) . '/config_form.php';
         return ob_get_clean();
     }
