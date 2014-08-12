@@ -5,6 +5,9 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder 'upload/modules/webwinkelkeur',
         '/var/www/modules/webwinkelkeur',
         type: 'rsync', rsync__exclude: '.*.swp'
+    config.vm.synced_folder 'upload/modules/webwinkelkeur',
+        '/var/www/prestashop-1.4.11.0/modules/webwinkelkeur',
+        type: 'rsync', rsync__exclude: '.*.swp'
 
     config.vm.provision :puppet do |puppet|
         puppet.manifests_path = 'puppet/manifests'
