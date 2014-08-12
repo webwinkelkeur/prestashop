@@ -9,7 +9,7 @@ class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.0.0';
+        $this->version = '1.1.0';
         $this->author = 'Albert Peschar';
         $this->need_instance = 0;
 
@@ -24,6 +24,9 @@ class WebwinkelKeur extends Module {
             return false;
 
         if(!$this->registerHook('header'))
+            return false;
+
+        if(!$this->registerHook('footer'))
             return false;
 
         if(!$this->registerHook('backOfficeTop'))
@@ -110,6 +113,62 @@ class WebwinkelKeur extends Module {
         ob_start();
         require dirname(__FILE__) . '/sidebar.php';
         return ob_get_clean();
+    }
+
+    public function hookFooter($params) {
+        if(!Configuration::get('WEBWINKELKEUR_RICH_SNIPPET')
+           || !($shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID'))
+           || !ctype_digit($shop_id)
+        )
+            return '';
+
+        $html = $this->getRichSnippet($shop_id);
+
+        if($html)
+            return $html;
+    }
+
+    private function getRichSnippet($shop_id) {
+        $tmp_dir = @sys_get_temp_dir();
+        if(!@is_writable($tmp_dir))
+            $tmp_dir = '/tmp';
+        if(!@is_writable($tmp_dir))
+            return;
+
+        $url = sprintf('http://www.webwinkelkeur.nl/shop_rich_snippet.php?id=%s',
+                       (int) $shop_id);
+
+        $cache_file = $tmp_dir . DIRECTORY_SEPARATOR . 'WEBWINKELKEUR_'
+            . md5(__FILE__) . '_' . md5($url);
+
+        $fp = @fopen($cache_file, 'rb');
+        if($fp)
+            $stat = @fstat($fp);
+
+        if($fp && $stat && $stat['mtime'] > time() - 7200
+           && ($json = @stream_get_contents($fp))
+        ) {
+            $data = json_decode($json, true);
+        } else {
+            $context = @stream_context_create(array(
+                'http' => array('timeout' => 3),
+            ));
+            $json = @file_get_contents($url, false, $context);
+            if(!$json) return;
+
+            $data = @json_decode($json, true);
+            if(empty($data['result'])) return;
+
+            $new_file = $cache_file . '.' . uniqid();
+            if(@file_put_contents($new_file, $json))
+                @rename($new_file, $cache_file) or @unlink($new_file);
+        }
+
+        if($fp)
+            @fclose($fp);
+        
+        if($data['result'] == 'ok')
+            return $data['content'];
     }
 
     public function getOrdersToInvite($db) {
@@ -249,6 +308,9 @@ class WebwinkelKeur extends Module {
 
             Configuration::updateValue('WEBWINKELKEUR_JAVASCRIPT',
                 !!tools::getValue('javascript'));
+
+            Configuration::updateValue('WEBWINKELKEUR_RICH_SNIPPET',
+                !!tools::getValue('rich_snippet'));
 
             if(sizeof($errors) == 0)
                 $success = true;

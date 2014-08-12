@@ -118,6 +118,24 @@ if(!defined('_PS_VERSION_'))
         </div>
         <br class="clear" />
 
+        <label for="adv_link"><?=$this->l('Rich snippet sterren');?></label>
+        <div class="margin-form">
+            <label class="t" for="webwinkelkeur-rich-snippet-on">
+                <img src="../img/admin/enabled.gif" alt="" />
+            </label>
+            <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_RICH_SNIPPET')) echo 'checked'; ?> />
+            <label class="t" for="webwinkelkeur-rich-snippet-on">Ja</label>
+            
+            <label class="t" for="webwinkelkeur-rich-snippet-off">
+                <img src="../img/admin/disabled.gif" alt="" />
+            </label>
+            <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_RICH_SNIPPET')) echo 'checked'; ?> />
+            <label class="t" for="webwinkelkeur-rich-snippet-off">Nee</label>
+
+            <p class="preference_description"><?=$this->l('Voeg een <a href="https://support.google.com/webmasters/answer/99170?hl=nl">rich snippet</a> toe aan de footer. Google kan uw waardering dan in de zoekresultaten tonen. Gebruik op eigen risico.');?></p>
+        </div>
+        <br class="clear" />
+
         <div class="margin-form">
             <input class="button" type="submit" value="<?=$this->l('Opslaan');?>" />
         </div>
