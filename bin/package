@@ -10,4 +10,3 @@ mkdir -p dist
 pathspec="README.txt upload"
 
 git archive -o dist/prestashop-webwinkelkeur.zip master $pathspec
-git archive -o dist/prestashop-evalor.zip evalor $pathspec
