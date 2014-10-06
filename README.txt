@@ -5,7 +5,7 @@ Deze module integreert de WebwinkelKeur sidebar in uw webshop. De module kan
 eenvoudig worden geïnstalleerd. Gebruik daarvoor de onderstaande
 installatieinstructies.
 
-De module is getest met PrestaShop versies 1.4 en 1.5.
+De module is getest met PrestaShop versies 1.4, 1.5 en 1.6.
 
 (C) 2013 Albert Peschar <albert@peschar.net>
 

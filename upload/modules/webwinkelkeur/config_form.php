@@ -132,7 +132,7 @@ if(!defined('_PS_VERSION_'))
             <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_RICH_SNIPPET')) echo 'checked'; ?> />
             <label class="t" for="webwinkelkeur-rich-snippet-off">Nee</label>
 
-            <p class="preference_description"><?=$this->l('Voeg een <a href="https://support.google.com/webmasters/answer/99170?hl=nl">rich snippet</a> toe aan de footer. Google kan uw waardering dan in de zoekresultaten tonen. Gebruik op eigen risico.');?></p>
+            <p class="preference_description"><?=html_entity_decode($this->l('Voeg een <a href="https://support.google.com/webmasters/answer/99170?hl=nl">rich snippet</a> toe aan de footer. Google kan uw waardering dan in de zoekresultaten tonen. Gebruik op eigen risico.'), ENT_QUOTES, 'UTF-8');?></p>
         </div>
         <br class="clear" />
 
