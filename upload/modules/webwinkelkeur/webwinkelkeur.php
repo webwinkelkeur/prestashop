@@ -267,8 +267,11 @@ class WebwinkelKeur extends Module {
     }
 
     public function hookBackofficeTop() {
-        foreach(Shop::getCompleteListOfShopsID() as $shop)
-            $this->sendInvites($shop);
+        if(method_exists('Shop', 'getCompleteListOfShopsID'))
+            foreach(Shop::getCompleteListOfShopsID() as $shop)
+                $this->sendInvites($shop);
+        else
+            $this->sendInvites(null);
     }
 
     public function getContent() {
