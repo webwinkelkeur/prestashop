@@ -9,7 +9,7 @@ class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Albert Peschar';
         $this->need_instance = 0;
 
