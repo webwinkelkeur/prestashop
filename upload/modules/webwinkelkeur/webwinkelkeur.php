@@ -171,7 +171,7 @@ class WebwinkelKeur extends Module {
             return $data['content'];
     }
 
-    public function getOrdersToInvite($db) {
+    public function getOrdersToInvite($db, $ps_shop_id) {
         $max_time = time() - 1800;
 
         $query = $db->executeS("
@@ -184,6 +184,7 @@ class WebwinkelKeur extends Module {
             INNER JOIN `" . _DB_PREFIX_ . "customer` c USING (id_customer)
             WHERE
                 o.webwinkelkeur_invite_sent = 0
+                AND o.id_shop = $ps_shop_id
                 AND o.webwinkelkeur_invite_tries < 10
                 AND o.webwinkelkeur_invite_time < $max_time
                 AND os.shipped = 1
@@ -214,18 +215,18 @@ class WebwinkelKeur extends Module {
         return $query;
     }
 
-    public function sendInvites() {
-        if(!($shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID'))
-           || !($api_key = Configuration::get('WEBWINKELKEUR_API_KEY'))
-           || !($invite = Configuration::get('WEBWINKELKEUR_INVITE'))
+    public function sendInvites($ps_shop_id) {
+        if(!($shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID', null, null, $ps_shop_id))
+           || !($api_key = Configuration::get('WEBWINKELKEUR_API_KEY', null, null, $ps_shop_id))
+           || !($invite = Configuration::get('WEBWINKELKEUR_INVITE', null, null, $ps_shop_id))
         )
             return;
         
-        $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY');
+        $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY', null, null, $ps_shop_id);
 
         $db = Db::getInstance();
 
-        $orders = $this->getOrdersToInvite($db);
+        $orders = $this->getOrdersToInvite($db, $ps_shop_id);
 
         if(!$orders)
             return;
@@ -266,7 +267,8 @@ class WebwinkelKeur extends Module {
     }
 
     public function hookBackofficeTop() {
-        $this->sendInvites();
+        foreach(Shop::getCompleteListOfShopsID() as $shop)
+            $this->sendInvites($shop);
     }
 
     public function getContent() {
