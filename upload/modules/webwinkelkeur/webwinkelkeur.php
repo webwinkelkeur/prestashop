@@ -12,6 +12,7 @@ class WebwinkelKeur extends Module {
         $this->version = '1.2.0';
         $this->author = 'Albert Peschar';
         $this->need_instance = 0;
+        $this->module_key = '905d0071afeef0d6aaf724f0a8bb801f';
 
         parent::__construct();
         
