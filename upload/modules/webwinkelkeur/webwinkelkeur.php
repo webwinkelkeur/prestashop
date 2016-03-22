@@ -62,10 +62,7 @@ class WebwinkelKeur extends Module {
             DELETE FROM `" . _DB_PREFIX_ . "webwinkelkeur_invite_error`
         ");
 
-        Configuration::updateValue('WEBWINKELKEUR_SIDEBAR', '');
-        Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_POSITION', 'left');
         Configuration::updateValue('WEBWINKELKEUR_INVITE', '');
-        Configuration::updateValue('WEBWINKELKEUR_TOOLTIP', '1');
         Configuration::updateValue('WEBWINKELKEUR_JAVASCRIPT', '1');
 
         return true;
@@ -85,10 +82,7 @@ class WebwinkelKeur extends Module {
     }
 
     public function hookHeader($params) {
-        if(!Configuration::get('WEBWINKELKEUR_SIDEBAR')
-           && !Configuration::get('WEBWINKELKEUR_TOOLTIP')
-           && !Configuration::get('WEBWINKELKEUR_JAVASCRIPT')
-        ) {
+        if(!Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) {
             return "<!-- WebwinkelKeur: JS disabled -->\n";
         }
 
@@ -100,15 +94,7 @@ class WebwinkelKeur extends Module {
 
         $settings = array(
             '_webwinkelkeur_id' => (int) $shop_id,
-            '_webwinkelkeur_sidebar' => !!Configuration::get('WEBWINKELKEUR_SIDEBAR'),
-            '_webwinkelkeur_tooltip' => !!Configuration::get('WEBWINKELKEUR_TOOLTIP'),
         );
-
-        if($sidebar_position = Configuration::get('WEBWINKELKEUR_SIDEBAR_POSITION'))
-            $settings['_webwinkelkeur_sidebar_position'] = $sidebar_position;
-
-        if($sidebar_top = Configuration::get('WEBWINKELKEUR_SIDEBAR_TOP'))
-            $settings['_webwinkelkeur_sidebar_top'] = $sidebar_top;
 
         ob_start();
         require dirname(__FILE__) . '/sidebar.php';
@@ -294,18 +280,8 @@ class WebwinkelKeur extends Module {
             Configuration::updateValue('WEBWINKELKEUR_SHOP_ID', trim($shop_id));
             Configuration::updateValue('WEBWINKELKEUR_API_KEY', trim($api_key));
 
-            Configuration::updateValue('WEBWINKELKEUR_SIDEBAR',
-                !!tools::getValue('sidebar'));
-            Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_POSITION',
-                tools::getValue('sidebar_position'));
-            Configuration::updateValue('WEBWINKELKEUR_SIDEBAR_TOP',
-                tools::getValue('sidebar_top'));
-
             Configuration::updateValue('WEBWINKELKEUR_INVITE',
                 (int) tools::getValue('invite'));
-
-            Configuration::updateValue('WEBWINKELKEUR_TOOLTIP',
-                !!tools::getValue('tooltip'));
 
             $invite_delay = tools::getValue('invite_delay');
             if(strlen($invite_delay) == 0) $invite_delay = 3;

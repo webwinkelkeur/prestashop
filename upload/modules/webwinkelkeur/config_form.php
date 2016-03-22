@@ -25,34 +25,21 @@ if(!defined('_PS_VERSION_'))
         </div>
         <br class="clear" />
 
-        <label for="adv_link"><?=$this->l('Sidebar weergeven');?></label>
+        <label for="adv_link"><?=$this->l('JavaScript-integratie');?></label>
         <div class="margin-form">
-            <label class="t" for="webwinkelkeur-sidebar-on">
+            <label class="t" for="webwinkelkeur-javascript-on">
                 <img src="../img/admin/enabled.gif" alt="" />
             </label>
-            <input type="radio" name="sidebar" id="webwinkelkeur-sidebar-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_SIDEBAR')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-sidebar-on">Ja</label>
+            <input type="radio" name="javascript" id="webwinkelkeur-javascript-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
+            <label class="t" for="webwinkelkeur-javascript-on">Ja</label>
             
-            <label class="t" for="webwinkelkeur-sidebar-off">
+            <label class="t" for="webwinkelkeur-javascript-off">
                 <img src="../img/admin/disabled.gif" alt="" />
             </label>
-            <input type="radio" name="sidebar" id="webwinkelkeur-sidebar-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_SIDEBAR')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-sidebar-off">Nee</label>
-        </div>
+            <input type="radio" name="javascript" id="webwinkelkeur-javascript-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
+            <label class="t" for="webwinkelkeur-javascript-off">Nee</label>
 
-        <label for="adv_link"><?=$this->l('Sidebar positie');?></label>
-        <div class="margin-form">
-            <input type="radio" name="sidebar_position" id="webwinkelkeur-sidebar-position-left" value="left" <?php if(Configuration::get('WEBWINKELKEUR_SIDEBAR_POSITION') == 'left') echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-sidebar-position-left">Links</label>
-            
-            <input type="radio" name="sidebar_position" id="webwinkelkeur-sidebar-position-right" value="right" <?php if(Configuration::get('WEBWINKELKEUR_SIDEBAR_POSITION') == 'right') echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-sidebar-position-right">Rechts</label>
-        </div>
-
-        <label for="adv_link"><?=$this->l('Sidebar hoogte');?></label>
-        <div class="margin-form">
-            <input id="adv_link" type="text" name="sidebar_top" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_SIDEBAR_TOP'));?>" style="width:50px" />
-            <p class="preference_description"><?=$this->l('Het aantal pixels vanaf de bovenkant.');?></p>
+            <p class="preference_description"><?= $this->l('Gebruik de JavaScript-integratie om de sidebar en de tooltip op je site te plaatsen. Alle instellingen voor de sidebar en de tooltip, vind je in het') ?> <a href="https://dashboard.webwinkelkeur.nl/integration" target="_blank">WebwinkelKeur Dashboard</a>.</p>
         </div>
         <br class="clear" />
 
@@ -83,38 +70,6 @@ if(!defined('_PS_VERSION_'))
         <div class="margin-form">
             <input id="adv_link" type="text" name="invite_delay" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_DELAY'));?>" style="width:50px" />
             <p class="preference_description"><?=$this->l('De uitnodiging wordt verstuurd nadat het opgegeven aantal dagen is verstreken.');?></p>
-        </div>
-        <br class="clear" />
-
-        <label for="adv_link"><?=$this->l('Tooltip weergeven');?></label>
-        <div class="margin-form">
-            <label class="t" for="webwinkelkeur-tooltip-on">
-                <img src="../img/admin/enabled.gif" alt="" />
-            </label>
-            <input type="radio" name="tooltip" id="webwinkelkeur-tooltip-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_TOOLTIP')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-tooltip-on">Ja</label>
-            
-            <label class="t" for="webwinkelkeur-tooltip-off">
-                <img src="../img/admin/disabled.gif" alt="" />
-            </label>
-            <input type="radio" name="tooltip" id="webwinkelkeur-tooltip-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_TOOLTIP')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-tooltip-off">Nee</label>
-        </div>
-        <br class="clear" />
-
-        <label for="adv_link"><?=$this->l('JavaScript-integratie');?></label>
-        <div class="margin-form">
-            <label class="t" for="webwinkelkeur-javascript-on">
-                <img src="../img/admin/enabled.gif" alt="" />
-            </label>
-            <input type="radio" name="javascript" id="webwinkelkeur-javascript-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-javascript-on">Ja</label>
-            
-            <label class="t" for="webwinkelkeur-javascript-off">
-                <img src="../img/admin/disabled.gif" alt="" />
-            </label>
-            <input type="radio" name="javascript" id="webwinkelkeur-javascript-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
-            <label class="t" for="webwinkelkeur-javascript-off">Nee</label>
         </div>
         <br class="clear" />
 
