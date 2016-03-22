@@ -163,11 +163,16 @@ class WebwinkelKeur extends Module {
         $query = $db->executeS("
             SELECT
                 o.*,
-                c.email
+                c.email,
+                a.firstname,
+                a.lastname,
+                l.language_code
             FROM `" . _DB_PREFIX_ . "orders` o
             INNER JOIN `" . _DB_PREFIX_ . "order_state` os ON
                 os.id_order_state = o.current_state
             INNER JOIN `" . _DB_PREFIX_ . "customer` c USING (id_customer)
+            LEFT JOIN `" . _DB_PREFIX_ . "address` a ON o.id_address_invoice = a.id_address
+            LEFT JOIN `" . _DB_PREFIX_ . "lang` l ON o.id_lang = l.id_lang
             WHERE
                 o.webwinkelkeur_invite_sent = 0
                 AND o.id_shop = $ps_shop_id
@@ -180,7 +185,10 @@ class WebwinkelKeur extends Module {
             $query = $db->executeS("
                 SELECT
                     o.*,
-                    c.email
+                    c.email,
+                a.firstname,
+                a.lastname,
+                l.language_code
                 FROM `" . _DB_PREFIX_ . "orders` o
                 INNER JOIN `" . _DB_PREFIX_ . "order_history` oh ON
                     oh.id_order = o.id_order
@@ -189,6 +197,8 @@ class WebwinkelKeur extends Module {
                 INNER JOIN `" . _DB_PREFIX_ . "order_state_lang` osl ON
                     osl.id_order_state = osl.id_order_state
                 INNER JOIN `" . _DB_PREFIX_ . "customer` c USING (id_customer)
+                LEFT JOIN `" . _DB_PREFIX_ . "address` a ON o.id_address_invoice = a.id_address
+                LEFT JOIN `" . _DB_PREFIX_ . "lang` l ON o.id_lang = l.id_lang
                 WHERE
                     o.webwinkelkeur_invite_sent = 0
                     AND o.webwinkelkeur_invite_tries < 10
@@ -235,6 +245,9 @@ class WebwinkelKeur extends Module {
                     'email'     => $order['email'],
                     'order'     => $order['id_order'],
                     'delay'     => $invite_delay,
+                    'lang'      => str_replace('-', '_', $order['language_code']),
+                    'customername' => $order['firstname'].' '.$order['lastname'],
+                    'client'    => 'prestashop'
                 );
                 if($invite == 2)
                     $parameters['noremail'] = '1';
