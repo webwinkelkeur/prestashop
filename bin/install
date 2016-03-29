@@ -6,4 +6,5 @@ if [[ ! -f "$1/config/config.inc.php" ]]; then
     exit 1
 fi
 
-stow -v -t "$1" -d `dirname "$0"`/.. upload
+mkdir -p "$1/modules/webwinkelkeur"
+stow -d $(dirname "$0")/../webwinkelkeur -t "$1/modules/webwinkelkeur" .

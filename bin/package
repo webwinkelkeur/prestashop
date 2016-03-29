@@ -7,6 +7,6 @@ cd ..
 rm -rf dist
 mkdir -p dist
 
-pathspec="README.txt upload"
+pathspec="README.txt webwinkelkeur"
 
 git archive -o dist/prestashop-webwinkelkeur.zip master $pathspec
