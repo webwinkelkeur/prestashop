@@ -39,7 +39,7 @@ if(!defined('_PS_VERSION_'))
             <input type="radio" name="javascript" id="webwinkelkeur-javascript-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
             <label class="t" for="webwinkelkeur-javascript-off">Nee</label>
 
-            <p class="preference_description"><?= sprintf(html_entity_decode($this->l('Gebruik de JavaScript-integratie om de sidebar en de tooltip op je site te plaatsen.<br>Alle instellingen voor de sidebar en de tooltip, vind je in het %sWebwinkelKeur Dashboard%s.'), ENT_QUOTES, 'UTF-8'), '<a href="https://dashboard.webwinkelkeur.nl/integration" target="_blank">', '</a>'); ?></p>
+            <p class="preference_description"><?= sprintf(html_entity_decode($this->l('Gebruik de JavaScript-integratie om de sidebar en de tooltip op uw site te plaatsen.<br>Alle instellingen voor de sidebar en de tooltip, vindt u in het %sWebwinkelKeur Dashboard%s.'), ENT_QUOTES, 'UTF-8'), '<a href="https://dashboard.webwinkelkeur.nl/integration" target="_blank">', '</a>'); ?></p>
         </div>
         <br class="clear" />
 
