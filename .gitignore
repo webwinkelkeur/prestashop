@@ -2,5 +2,5 @@
 /dist
 .vagrant
 /test/node_modules
-/test/error.png
-/test/error.jpg
+/test/error-images/*.jpg
+/test/error-images/*.png
