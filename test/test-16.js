@@ -26,27 +26,24 @@ const puppeteer = require('puppeteer');
         }
 
         console.log('Going to modules page');
-        await page.hover('#subtab-AdminParentModulesSf');
-        await page.click('#subtab-AdminModulesSf a');
+        await page.hover('#maintab-AdminParentModules');
+        await page.click('#subtab-AdminModules a');
         await page.waitForNavigation();
 
         console.log('Uploading module');
-        await page.click('#page-header-desc-configuration-add_module');
-        await page.waitForSelector('#importDropzone input[type="file"]');
-        const fileUpload = await page.$('#importDropzone input[type="file"]');
-        await fileUpload.uploadFile('../dist/prestashop-webwinkelkeur.zip');
-
-        console.log('Going to installed modules page');
-        await page.waitForSelector('a.module-import-success-configure', {visible: true});
-        await page.click('#module-modal-import-closing-cross');
-        await page.click('.page-head-tabs a.tab:nth-child(2)');
+        await page.click('#desc-module-new');
+        await page.waitForSelector('#module_install form');
+        const fileUpload = await page.$('#file');
+        await fileUpload.uploadFile('../dist/prestashop-webwinkelkeur-1.6.zip');
+        await page.click('#module_install form button[type="submit"]');
         await page.waitForNavigation();
 
-        console.log('Going to module configuration page');
-        await page.click(
-            '[data-tech-name="webwinkelkeur"] [data-confirm_modal="module-modal-confirm-webwinkelkeur-configure"]'
-        );
+        console.log('Installing module');
+        await page.click('a[data-module-name="webwinkelkeur"]');
+        await page.waitForSelector('#proceed-install-anyway', {visible: true});
+        await page.click('#proceed-install-anyway');
         await page.waitForNavigation();
+
 
         console.log('Configuring module');
         await page.focus('[name="shop_id"]');
@@ -54,7 +51,7 @@ const puppeteer = require('puppeteer');
         await page.focus('[name="api_key"]');
         await page.type('1234');
         await page.click('#content form [type="submit"]');
-        await page.waitForNavigation();
+
         const successConfirmation = await page.$('.module_confirmation.conf.confirm.alert.alert-success');
         if (!successConfirmation) {
             throw new Error('Could not see success confirmation after configuring module!');

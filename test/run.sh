@@ -3,7 +3,7 @@
 db_container_name="ps-db"
 
 ps_container_name="prestashop-testing"
-ps_version='latest'
+ps_version='1.6'
 
 
 if [ ! -z "$(docker ps -a | grep $ps_container_name)" ]
