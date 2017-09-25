@@ -12,7 +12,10 @@ function getTestCaseForVersion(version) {
 
 async function run(params) {
     console.log('Starting test');
-    const browser = await puppeteer.launch({headless: params.headless === 'true', slowMo: parseInt(params['slow-mo'])});
+    const browser = await puppeteer.launch({
+        headless: params.headless === 'true',
+        slowMo: parseInt(params['slow-mo'])
+    });
     const page = await browser.newPage();
     await page.setViewport({width: params.width, height: params.height});
 
@@ -38,7 +41,7 @@ exports.defaultParams = {
     'root-url': 'http://localhost:8081',
     'admin-user': 'autotester@kiboit.com',
     'admin-pass': 'tester',
-    'module-dir': __dirname + '/..//../dist/',
+    'module-dir': __dirname + '/../../dist/',
     'module-file': 'prestashop-webwinkelkeur.zip',
     'error-image-dir': __dirname + '/../error-images/',
     'headless': 'true',
