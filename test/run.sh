@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 
 if [ $# -gt 0 ]
 then
@@ -6,8 +7,8 @@ then
 else
     ps_version='latest'
 fi;
-echo "Starting test for $ps_version"
 
+echo "Starting test for $ps_version"
 set -u
 
 function cleanup_container {
@@ -17,13 +18,16 @@ function cleanup_container {
     docker rm $1
 }
 
-echo "Generating module package"
 curdir="$(dirname "$0")"
-$curdir/../bin/package
-if [ $? -ne 0 ]
+if [ ! -f $curdir/../dist/prestashop-webwinkelkeur.zip ]
 then
-    echo "Failed creating package"
-    exit 1
+    echo "Generating module package"
+    $curdir/../bin/package
+    if [ $? -ne 0 ]
+    then
+        echo "Failed creating package"
+        exit 1
+    fi;
 fi;
 
 echo "Starting DB container for $ps_version"
