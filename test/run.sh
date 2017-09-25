@@ -81,7 +81,7 @@ do
 done
 
 echo "Starting tests for $ps_version"
-node single-run.js --root-url="http://$ps_ip" --headless=false --version=$ps_version
+node single-run.js --root-url="http://$ps_ip" --version=$ps_version "$@"
 
 cleanup_container $ps_id
 cleanup_container $db_id
