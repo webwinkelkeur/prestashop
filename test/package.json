@@ -1,0 +1,8 @@
+{
+  "name": "wwk-prestashop-tests",
+  "description": "Functional tests for Webwinkelkeur prestashop module",
+  "version": "0.0.1",
+  "dependencies": {
+    "puppeteer": ">=0.11.0"
+  }
+}
