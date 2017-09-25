@@ -7,6 +7,9 @@ cd ..
 rm -rf dist
 mkdir -p dist
 
-pathspec="README.txt webwinkelkeur"
+git archive master webwinkelkeur |  tar -x -C dist
+cp README.txt dist/webwinkelkeur
+cd dist
+zip -r prestashop-webwinkelkeur.zip webwinkelkeur
+rm -rf webwinkelkeur README.txt
 
-git archive -o dist/prestashop-webwinkelkeur.zip master $pathspec
