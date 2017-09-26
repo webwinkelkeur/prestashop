@@ -4,3 +4,4 @@
 /test/node_modules
 /test/error-images/*.jpg
 /test/error-images/*.png
+.idea
