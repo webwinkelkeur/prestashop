@@ -14,16 +14,15 @@ async function run(params) {
     console.log('Starting test');
     const browser = await puppeteer.launch({
         headless: params.headless === 'true',
-        slowMo: parseInt(params['slow-mo'])
+        slowMo: parseInt(params['slow-mo']),
+        args: ['--window-size=' + [params.width, params.height].join(',')]
     });
     const page = await browser.newPage();
     await page.setViewport({
         width: params.width,
-        height: params.height,
-        deviceScaleFactor: 1,
-        isMobile: false
+        height: params.height
+
     });
-    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36');
 
     const testCase = getTestCaseForVersion(params.version);
     const test = new testCase(params, page);

@@ -89,11 +89,6 @@ class BaseTest {
         await this.logout();
         await this.checkBanner();
     }
-
-    async sleep(miliseconds) {
-        console.log('Sleeping for: ' + miliseconds + 'ms');
-        return new Promise((resolve, reject) => setTimeout(resolve, miliseconds));
-    }
 }
 
 exports.BaseTest = BaseTest;
