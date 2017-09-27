@@ -17,7 +17,13 @@ async function run(params) {
         slowMo: parseInt(params['slow-mo'])
     });
     const page = await browser.newPage();
-    await page.setViewport({width: params.width, height: params.height});
+    await page.setViewport({
+        width: params.width,
+        height: params.height,
+        deviceScaleFactor: 1,
+        isMobile: false
+    });
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36');
 
     const testCase = getTestCaseForVersion(params.version);
     const test = new testCase(params, page);

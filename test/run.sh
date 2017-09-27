@@ -8,6 +8,12 @@ else
     ps_version='latest'
 fi;
 
+no_tests='false'
+if [ $# -gt 1 ] && [ $2 = "--no-tests" ]
+then
+    no_tests='true'
+fi;
+
 echo "Starting test for $ps_version"
 set -u
 
@@ -80,8 +86,13 @@ do
     started=$?
 done
 
-echo "Starting tests for $ps_version"
-node single-run.js --root-url="http://$ps_ip" --version=$ps_version "$@"
+if [ $no_tests = "true" ]
+then
+    read -n 1 -s -r -p "Press any key to end"
+else
+    echo "Starting tests for $ps_version"
+    node single-run.js --root-url="http://$ps_ip" --version=$ps_version "$@"
+fi;
 
 cleanup_container $ps_id
 cleanup_container $db_id

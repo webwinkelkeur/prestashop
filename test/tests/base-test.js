@@ -1,8 +1,22 @@
 class BaseTest {
 
     constructor(params, page) {
+
+        let pageExtensions = {
+            _waitForVisible: async function (selector, opts) {
+                console.log('Waiting for: ' + selector);
+                opts = Object.assign({}, opts, {visible: true});
+                return this.waitForSelector(selector, opts);
+            },
+
+            _waitForVisibleAndClick: async function (selector, opts) {
+                await this._waitForVisible(selector, opts);
+                return this.click(selector);
+            }
+        };
+
         this.params = params;
-        this.page = page;
+        this.page = Object.assign(page, pageExtensions);
     }
 
     async gotoAdmin() {
@@ -35,19 +49,15 @@ class BaseTest {
         await this.page.focus('[name="api_key"]');
         await this.page.type(this.params['shop-key']);
         await this.page.click('#content form [type="submit"]');
-        await this.page.waitForNavigation();
-        const successConfirmation = await this.page.$('.module_confirmation.conf.confirm.alert.alert-success');
-        if (!successConfirmation) {
-            throw new Error('Could not see success confirmation after configuring module!');
-        }
+        await this.page._waitForVisible('.module_confirmation.conf.confirm.alert.alert-success')
     }
 
     async logout() {
         console.log('Logging out');
         await this.page.click('#employee_infos > a[data-toggle="dropdown"]');
-        await this.page.waitForSelector('#header_logout', {visible: true});
+        await this.page._waitForVisible('#header_logout');
         await this.page.click('#header_logout');
-        await this.page.waitForNavigation();
+        await this.page._waitForVisible('#login-panel');
     }
 
     async checkBanner() {
@@ -78,6 +88,11 @@ class BaseTest {
         await this.configureModule();
         await this.logout();
         await this.checkBanner();
+    }
+
+    async sleep(miliseconds) {
+        console.log('Sleeping for: ' + miliseconds + 'ms');
+        return new Promise((resolve, reject) => setTimeout(resolve, miliseconds));
     }
 }
 
