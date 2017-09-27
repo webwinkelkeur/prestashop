@@ -1,10 +1,11 @@
 const puppeteer = require('puppeteer');
 
 function getTestCaseForVersion(version) {
-    if (['latest', '1.7.2.2', '1.7'].indexOf(version) > -1) {
+    let majorVersion = version.substr(0, 3);
+    if (version === 'latest' || majorVersion === '1.7') {
         return require('./test-17').TestCase;
     }
-    if (['1.6', '1.6.1.17'].indexOf(version) > -1) {
+    if (majorVersion === '1.6') {
         return require('./test-16').TestCase;
     }
     throw new Error('Unknown version: ' + version);

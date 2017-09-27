@@ -67,7 +67,7 @@ ps_id=`docker run \
 if [ $? != 0 ]
 then
     echo "Container failed"
-    cleanup_container $ps_version
+    cleanup_container $ps_id
     cleanup_container $db_id
     exit 1
 fi;
