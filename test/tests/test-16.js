@@ -2,6 +2,17 @@ let BaseTest = require('./base-test').BaseTest;
 
 class Test16 extends BaseTest {
 
+    passEnvPage() {
+        return new Promise(resolve => resolve());
+    }
+
+    async afterDatabaseTest() {
+        await this.page.waitFor(2000);
+        await this.page._waitForVisibleAndClick('#btTestDB');
+        await this.page.waitFor(5000);
+        return this.page._waitForVisibleAndClick('#btTestDB');
+    }
+
     async installModule() {
         console.log('Going to modules page');
         await this.page.hover('#maintab-AdminParentModules');

@@ -2,6 +2,12 @@ let BaseTest = require('./base-test').BaseTest;
 
 class Test17 extends BaseTest {
 
+    async passEnvPage() {
+        console.log('Passing environment test page');
+        await this.page._waitForVisible('.okBlock');
+        return this.page._waitForVisibleAndClick('#btNext');
+    }
+
     async installModule() {
         console.log('Going to modules page');
         await this.page._waitForVisibleAndClick('#subtab-AdminParentModulesSf > a');

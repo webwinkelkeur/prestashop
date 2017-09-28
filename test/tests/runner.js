@@ -22,7 +22,9 @@ async function run(params) {
     await page.setViewport({
         width: params.width,
         height: params.height
-
+    });
+    await page.setExtraHTTPHeaders({
+        'Accept-Language': 'en-US,en;q=0.8'
     });
 
     const testCase = getTestCaseForVersion(params.version);
@@ -45,8 +47,13 @@ async function run(params) {
 exports.run = run;
 exports.defaultParams = {
     'root-url': 'http://localhost:8081',
+    'db-server': 'localhost',
+    'db-pass': 'admin',
+    'shop-name': 'Test shop',
+    'admin-first-name': 'Jon',
+    'admin-last-name': 'Doe',
     'admin-user': 'autotester@kiboit.com',
-    'admin-pass': 'tester',
+    'admin-pass': 'tester123',
     'module-dir': __dirname + '/../../dist/',
     'module-file': 'prestashop-webwinkelkeur.zip',
     'error-image-dir': __dirname + '/../error-images/',
@@ -56,5 +63,5 @@ exports.defaultParams = {
     'height': 1080,
     'shop-id': '1',
     'shop-key': '1234',
-    'version': 'latest'
+    'version': 'latest',
 };
