@@ -36,7 +36,7 @@ class BaseTest {
 
         console.log('Canceling onboarding');
         try {
-            await this.page.click('.onboarding-popup .buttons .onboarding-button-shut-down');
+            await this.page.click('.onboarding-button-shut-down');
         } catch (e) {
             console.log('There was no onboarding')
         }
