@@ -1,12 +1,19 @@
 const puppeteer = require('puppeteer');
 
 function getTestCaseForVersion(version) {
-    let majorVersion = version.substr(0, 3);
-    if (version === 'latest' || majorVersion === '1.7') {
-        return require('./test-17').TestCase;
+    return require(getModulePathForVersion(version)).TestCase;
+}
+
+function getModulePathForVersion(version) {
+    let versionParts = version.split('.');
+    if (versionParts[1] === '7') {
+        return './test-17';
     }
-    if (majorVersion === '1.6') {
-        return require('./test-16').TestCase;
+    if (versionParts[1] === '6' && versionParts[2] === '0') {
+        return './test-1601';
+    }
+    if (versionParts[1] === '6') {
+        return './test-16';
     }
     throw new Error('Unknown version: ' + version);
 }
@@ -30,18 +37,32 @@ async function run(params) {
     const testCase = getTestCaseForVersion(params.version);
     const test = new testCase(params, page);
 
+    let status;
+
     try {
         await test.run();
         console.log('Success!');
+        status = true;
     } catch (e) {
         console.error('Error: ' + e.message);
         const now = new Date();
-        const filename = 'error-' + params.version + '-' + now.toISOString() + '.jpg';
+        const filename = 'error-' + now.toISOString() + '-' + params.version + '.jpg';
         const fullFilename = params['error-image-dir'] + '/' + filename;
         await page.screenshot({path: fullFilename, fullPage: true, quality: 100});
         console.log('Screenshot saved in ' + fullFilename);
+        status = false;
     }
-    browser.close();
+
+    if (params.close === 'true') {
+        browser.close();
+        return status;
+    }
+
+    const repl = require('repl');
+    const r = repl.start('> ')
+    r.context.page = page
+
+    return new Promise(_ => {});
 }
 
 exports.run = run;
@@ -64,4 +85,5 @@ exports.defaultParams = {
     'shop-id': '1',
     'shop-key': '1234',
     'version': 'latest',
+    'close': 'true',
 };

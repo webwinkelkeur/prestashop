@@ -57,7 +57,7 @@ class BaseTest {
         console.log('Testing DB connection');
         await this.page._waitForVisibleAndClick('#btTestDB');
 
-        await this.afterDatabaseTest();
+        await this.waitForCreateDBButton();
 
         console.log('Create DB');
         await this.page._waitForVisibleAndClick('#btCreateDB');
@@ -131,7 +131,7 @@ class BaseTest {
         throw new Error('BaseTest::passEnvPage() not implemented');
     }
 
-    afterDatabaseTest() {}
+    waitForCreateDBButton() {}
 
     installModule() {
         throw new Error('BaseTest::installModule() not implemented');
