@@ -57,13 +57,17 @@ ps_id=`docker run \
         --link $db_id \
         -e DB_SERVER=$db_ip \
         -e PS_DEV_MODE=1 \
-        -e PS_INSTALL_AUTO=1 \
         -e PS_ERASE_DB=1 \
         -e PS_FOLDER_ADMIN=admin1 \
         -e PS_FOLDER_INSTALL=install1 \
         -e ADMIN_MAIL='autotester@kiboit.com' \
         -e ADMIN_PASSWD=tester \
-        -d prestashop/prestashop:$ps_version`
+        -d prestashop/prestashop:$ps_version \
+        /bin/bash -c 'sed "s/http:\/\/www\.unicode\.org\/repos\/cldr-aux\/json\/26/http:\/\/i18n.prestashop.com\/cldr\/json-full/" \
+        </var/www/html/vendor/icanboogie/cldr/lib/WebProvider.php >/var/www/html/vendor/icanboogie/cldr/lib/WebProvider.php && \
+        /tmp/docker_run.sh'`
+
+
 if [ $? != 0 ]
 then
     echo "Container failed"
