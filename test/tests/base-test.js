@@ -1,3 +1,5 @@
+const childProcess = require('child_process');
+
 class BaseTest {
 
     constructor(params, page) {
@@ -107,8 +109,28 @@ class BaseTest {
         await this.page.type(this.params['shop-id']);
         await this.page.focus('[name="api_key"]');
         await this.page.type(this.params['shop-key']);
+        await this.page.click('#webwinkelkeur-invite-on');
         await this.page.click('#content form [type="submit"]');
         await this.page._waitForVisible('.module_confirmation.conf.confirm.alert.alert-success')
+    }
+
+    async setOrdersToUninvited() {
+        console.log('Setting orders to not invited');
+        await this.execMysql('update ps_orders set webwinkelkeur_invite_sent = 0');
+    }
+
+    async gotoOrdersPage() {
+        console.log('Going to orders page');
+        await this.page.click('#nav-sidebar a[href*=AdminOrder]');
+    }
+
+    async checkIfAPIWasCalled() {
+        console.log('Checking if API was called');
+        const dbResults = await this.execMysql('select * from ps_webwinkelkeur_invite_error');
+        if (dbResults === '') {
+            throw new Error('An error for the API call was not found in the DB');
+        }
+        console.log('It was called');
     }
 
     async logout() {
@@ -141,6 +163,10 @@ class BaseTest {
         throw new Error('BaseTest::gotoModuleConfiguration() not implemented');
     }
 
+    async finishTestOrder() {
+        throw new Error('BaseTest::finishTestOrder() not implemented');
+    }
+
     getModuleFileName() {
         return this.params['module-dir'] + this.params['module-file'];
     }
@@ -152,8 +178,30 @@ class BaseTest {
         await this.installModule();
         await this.gotoModuleConfiguration();
         await this.configureModule();
+        await this.gotoOrdersPage();
+        await this.setOrdersToUninvited();
+        await this.finishTestOrder();
+        await this.checkIfAPIWasCalled();
         await this.logout();
         await this.checkBanner();
+    }
+
+    async execMysql(query) {
+        console.log('Executing query: ' + query);
+        const cmd = `mysql -h ${this.params['db-server']} -u root -p${this.params['db-pass']} prestashop -e "${query}"`;
+        console.log('Executing command: ' + cmd);
+        return new Promise((resolve) => childProcess.exec(
+            cmd, (error, stdout) => resolve(stdout)
+        ));
+    }
+
+    async dropInREPL() {
+        const repl = require('repl');
+        const r = repl.start('REPL> ');
+        r.context.test = this;
+        return new Promise((resolve) => {
+            r.on('exit', () => resolve());
+        });
     }
 }
 

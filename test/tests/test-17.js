@@ -1,6 +1,6 @@
-let BaseTest = require('./base-test').BaseTest;
+let Test1610 = require('./test-1610').TestCase;
 
-class Test17 extends BaseTest {
+class Test17 extends Test1610 {
 
     async passEnvPage() {
         console.log('Passing environment test page');

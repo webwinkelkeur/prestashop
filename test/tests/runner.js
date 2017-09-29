@@ -53,16 +53,12 @@ async function run(params) {
         status = false;
     }
 
-    if (params.close === 'true') {
-        browser.close();
-        return status;
+    if (params.close !== 'true') {
+        return test.dropInREPL();
     }
 
-    const repl = require('repl');
-    const r = repl.start('> ')
-    r.context.page = page
-
-    return new Promise(_ => {});
+    browser.close();
+    return status;
 }
 
 exports.run = run;

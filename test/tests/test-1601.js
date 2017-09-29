@@ -45,6 +45,24 @@ class Test1601 extends BaseTest {
     }
 
     gotoModuleConfiguration() {}
+
+    async finishTestOrder() {
+        await this.gotoTestOrder();
+        await this.setTestOrderStatus();
+    }
+
+    async gotoTestOrder() {
+        console.log('Going to test order');
+        await this.page._waitForVisibleAndClick('#order a[title="View"]');
+    }
+
+    async setTestOrderStatus() {
+        console.log('Finishing order');
+        await this.page._waitForVisible('#id_order_state');
+        await this.page.$eval('#id_order_state', (e) => e.value = 4);
+        await this.page.click('button[name="submitState"]');
+        await this.page.waitFor(1000);
+    }
 }
 
 exports.TestCase = Test1601;

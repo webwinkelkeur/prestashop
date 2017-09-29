@@ -12,6 +12,11 @@ class Test1610 extends Test1607 {
         await this.page._waitForVisibleAndClick('#proceed-install-anyway');
     }
 
+    async gotoTestOrder() {
+        console.log('Going to test order');
+        await this.page._waitForVisibleAndClick('#form-order a[title="View"]');
+    }
+
 }
 
 exports.TestCase = Test1610;
