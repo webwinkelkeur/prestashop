@@ -5,15 +5,15 @@ function getTestCaseForVersion(version) {
 }
 
 function getModulePathForVersion(version) {
-    let versionParts = version.split('.');
-    if (versionParts[1] === '7') {
+    let versionParts = version.split('.').map((v) => parseInt(v));
+    if (versionParts[1] === 7) {
         return './test-17';
     }
-    if (versionParts[1] === '6' && versionParts[2] === '0') {
-        return './test-1601';
+    if (versionParts[1] === 6 && versionParts[2] === 0) {
+        return versionParts[3] < 7 ? './test-1601' : './test-1607';
     }
-    if (versionParts[1] === '6') {
-        return './test-16';
+    if (versionParts[1] === 6) {
+        return './test-1610';
     }
     throw new Error('Unknown version: ' + version);
 }
