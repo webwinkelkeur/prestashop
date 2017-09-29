@@ -10,6 +10,10 @@ class Test17 extends BaseTest {
 
     async installModule() {
         console.log('Going to modules page');
+        try {
+            await this.page.click('#error-modal');
+            await this.page.waitFor(1000);
+        } catch(e) {}
         await this.page._waitForVisibleAndClick('#subtab-AdminParentModulesSf > a');
 
         console.log('Uploading module: ' + this.getModuleFileName());
