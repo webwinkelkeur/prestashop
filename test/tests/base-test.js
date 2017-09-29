@@ -81,7 +81,7 @@ class BaseTest {
     async gotoAdmin() {
         const adminUrl = this.params['root-url'] + '/admin1';
         console.log('Going to ' + adminUrl);
-        await this.page.goto(adminUrl);
+        await this.page.goto(adminUrl, {timeout: 60000});
     }
 
     async login() {
