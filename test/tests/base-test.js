@@ -5,8 +5,15 @@ class BaseTest {
     constructor(params, page) {
 
         let pageExtensions = {
+
+            _doAndWaitForNavigation: async function (actions, opts) {
+                let navigationPromise = this.waitForNavigation(opts);
+                await actions();
+                return navigationPromise;
+            },
+
             _waitForVisible: async function (selector, opts) {
-                console.log('Waiting for: ' + selector);
+                console.log('--- Waiting for: ' + selector);
                 opts = Object.assign({}, opts, {visible: true});
                 return this.waitForSelector(selector, opts);
             },
@@ -17,8 +24,14 @@ class BaseTest {
             },
 
             _pointAndType: async function (selector, text) {
-                console.log('Typing "' + text + '" in ' + selector);
+                console.log('--- Typing "' + text + '" in ' + selector);
                 await this.focus(selector);
+                await this.type(text);
+            },
+
+            _focusAndReplace: async function (selector, text) {
+                console.log('--- Replacing with "' + text + '" in ' + selector);
+                await this.click(selector, {clickCount: 2, delay: 200});
                 await this.type(text);
             }
         };
@@ -92,23 +105,16 @@ class BaseTest {
         await this.page.type(this.params['admin-user']);
         await this.page.focus('#passwd');
         await this.page.type(this.params['admin-pass']);
-        await this.page.click('button[name="submitLogin"]');
-        await this.page.waitForNavigation();
-
-        console.log('Canceling onboarding');
-        try {
-            await this.page.click('.onboarding-button-shut-down');
-        } catch (e) {
-            console.log('There was no onboarding')
-        }
+        await this.page._doAndWaitForNavigation(
+            () => this.page.click('button[name="submitLogin"]'),
+            {timeout: 60000}
+        );
     }
 
-    async configureModule() {
+    async configureModule(shopId, shopKey) {
         console.log('Configuring module');
-        await this.page.focus('[name="shop_id"]');
-        await this.page.type(this.params['shop-id']);
-        await this.page.focus('[name="api_key"]');
-        await this.page.type(this.params['shop-key']);
+        await this.page._focusAndReplace('[name="shop_id"]', shopId);
+        await this.page._focusAndReplace('[name="api_key"]', shopKey);
         await this.page.click('#webwinkelkeur-invite-on');
         await this.page.click('#content form [type="submit"]');
         await this.page._waitForVisible('.module_confirmation.conf.confirm.alert.alert-success')
@@ -149,11 +155,54 @@ class BaseTest {
         await this.page.waitForSelector('.wwk--sidebar', {visible: true});
     }
 
+    async configureModuleForStore2() {
+        console.log('Configuring module for store 2');
+        await this.page.waitFor(1000);
+        await this.page._waitForVisibleAndClick('a[href*="controller=AdminModules"]');
+        await this.page._waitForVisibleAndClick('a[href*="module_name=webwinkelkeur"]');
+        await this.page._doAndWaitForNavigation(() => this.selectShopToConfigure());
+        await this.configureModule(this.params['shop2-id'], this.params['shop2-key']);
+    }
+
+    async checkModuleConfigurationForStore2() {
+        console.log('Checking configuration for store 2');
+        await this.page._waitForVisible('[name="shop_id"]');
+        let actualId = await this.page.$eval('[name="shop_id"]', e => e.value);
+        let actualApiKey = await this.page.$eval('[name="api_key"]', e => e.value);
+        if (actualId !== this.params['shop2-id']) {
+            throw new Error('Actual shop2 id wrong. It was: ' + actualId);
+        }
+        if (actualApiKey !== this.params['shop2-key']) {
+            throw new Error('Actual shop2 API key wrong. It was: ' + actualApiKey);
+        }
+        console.log('OK');
+    }
+
+    async gotoShop2() {
+        let url = this.params['root-url'] + '/' + this.params['shop2-virtual-url'];
+        console.log('Going to shop2 url: ' + url);
+        await this.page.goto(url);
+    }
+
+    async checkShop2BannerCode() {
+        console.log('Checking banner code for shop 2');
+        let html = await this.page.content();
+        let id = html.match(/_webwinkelkeur_id\s*=\s*(\d+);/)[1];
+        if (id !== this.params['shop2-id']) {
+            throw new Error('ID in code did not match. It was: ' + id);
+        }
+        console.log('OK');
+    }
+
     passEnvPage() {
         throw new Error('BaseTest::passEnvPage() not implemented');
     }
 
     waitForCreateDBButton() {}
+
+    configureMultistore() {
+        throw new Error('BaseTest::configureMultistore() not implemented');
+    }
 
     installModule() {
         throw new Error('BaseTest::installModule() not implemented');
@@ -167,6 +216,10 @@ class BaseTest {
         throw new Error('BaseTest::finishTestOrder() not implemented');
     }
 
+    selectShopToConfigure() {
+        throw new Error('BaseTest::selectShopToConfigure() not implemented');
+    }
+
     getModuleFileName() {
         return this.params['module-dir'] + this.params['module-file'];
     }
@@ -177,13 +230,22 @@ class BaseTest {
         await this.login();
         await this.installModule();
         await this.gotoModuleConfiguration();
-        await this.configureModule();
+        await this.configureModule(this.params['shop-id'], this.params['shop-key']);
         await this.gotoOrdersPage();
         await this.setOrdersToUninvited();
         await this.finishTestOrder();
         await this.checkIfAPIWasCalled();
         await this.logout();
         await this.checkBanner();
+        await this.gotoAdmin();
+        await this.login();
+        await this.configureMultistore();
+        await this.configureModuleForStore2();
+        await this.checkModuleConfigurationForStore2();
+        await this.logout();
+        await this.checkBanner();
+        await this.gotoShop2();
+        await this.checkShop2BannerCode();
     }
 
     async execMysql(query) {

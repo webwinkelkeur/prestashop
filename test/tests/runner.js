@@ -67,6 +67,8 @@ exports.defaultParams = {
     'db-server': 'localhost',
     'db-pass': 'admin',
     'shop-name': 'Test shop',
+    'shop2-name': 'Test shop 2',
+    'shop2-virtual-url': 'test-shop-2',
     'admin-first-name': 'Jon',
     'admin-last-name': 'Doe',
     'admin-user': 'autotester@kiboit.com',
@@ -80,6 +82,8 @@ exports.defaultParams = {
     'height': 1080,
     'shop-id': '1',
     'shop-key': '1234',
+    'shop2-id': '2',
+    'shop2-key': '5678',
     'version': 'latest',
     'close': 'true',
 };
