@@ -23,6 +23,12 @@ class BaseTest {
                 return this.click(selector);
             },
 
+            _waitForAndClickInPage: async function (selector, opts) {
+                console.log('--- Waiting for DOM: ' + selector);
+                await this.waitForSelector(selector, opts);
+                return this.$eval(selector, e => e.click());
+            },
+
             _pointAndType: async function (selector, text) {
                 console.log('--- Typing "' + text + '" in ' + selector);
                 await this.focus(selector);
@@ -107,7 +113,7 @@ class BaseTest {
         await this.page.type(this.params['admin-pass']);
         await this.page._doAndWaitForNavigation(
             () => this.page.click('button[name="submitLogin"]'),
-            {timeout: 60000}
+            {timeout: 90000}
         );
     }
 

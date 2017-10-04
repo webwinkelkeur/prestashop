@@ -91,12 +91,12 @@ class Test1601 extends BaseTest {
 
     async gotoTestOrder() {
         console.log('Going to test order');
-        await this.page._waitForVisibleAndClick('#order a[title="View"]');
+        await this.page._waitForVisibleAndClick('#order a[title="View"], .table.order a[title="View"]');
     }
 
     async setTestOrderStatus() {
         console.log('Finishing order');
-        await this.page._waitForVisible('#id_order_state');
+        await this.page.waitFor('#id_order_state');
         await this.page.$eval('#id_order_state', (e) => e.value = 4);
         await this.page.click('button[name="submitState"]');
         await this.page.waitFor(1000);

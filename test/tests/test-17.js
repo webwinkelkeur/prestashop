@@ -50,7 +50,7 @@ class Test17 extends Test1610 {
     }
 
     async navigateToModulesPage() {
-        await this.page._waitForVisibleAndClick('#subtab-AdminParentModulesSf > a');
+        await this.page._waitForAndClickInPage('#subtab-AdminParentModulesSf > a');
     }
 
     async navigateToConfigPage() {

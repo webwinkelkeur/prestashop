@@ -10,7 +10,16 @@ function getModulePathForVersion(version) {
         return './test-17';
     }
     if (versionParts[1] === 6 && versionParts[2] === 0) {
-        return versionParts[3] < 7 ? './test-1601' : './test-1607';
+        if (versionParts[3] < 3) {
+            return './test-1601';
+        }
+        if (versionParts[3] === 3) {
+            return './test-1603';
+        }
+        if (versionParts[3] < 7) {
+            return './test-1604';
+        }
+        return './test-1607';
     }
     if (versionParts[1] === 6) {
         return './test-1610';

@@ -9,7 +9,7 @@ threads=$((cpus+1))
 mkdir -p log
 
 test() {
-    if ./run.sh --headless=false $1 >log/$1.log 2>&1; then
+    if ./run.sh $1 >log/$1.log 2>&1; then
         echo "PASS $1"
         rm -f log/$1.log
     else
