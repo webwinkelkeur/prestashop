@@ -3,13 +3,11 @@
 if(!defined('_PS_VERSION_'))
     exit;
 
-require_once dirname(__FILE__) . '/vendor/Peschar/URLRetriever.php';
-
 class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.2.0';
+        $this->version = '1.3.0';
         $this->author = 'Albert Peschar';
         $this->need_instance = 0;
         $this->module_key = '905d0071afeef0d6aaf724f0a8bb801f';
@@ -212,6 +210,24 @@ class WebwinkelKeur extends Module {
         return $query;
     }
 
+    public function getOrderLines($db, $order_id) {
+        $query = "SELECT * FROM `" . _DB_PREFIX_ . "order_detail` WHERE id_order = $order_id";
+        $results = $db->executeS($query);
+        return $results;
+    }
+
+    public function getCustomerInfo($db, $customer_id) {
+        $query = "SELECT * FROM `" . _DB_PREFIX_ . "customer` WHERE id_customer = $customer_id";
+        $customer_info = $db->executeS($query);
+        $customer_info = $customer_info[0];
+        unset ($customer_info['passwd']);
+        unset ($customer_info['last_passwd_gen']);
+        unset ($customer_info['secure_key']);
+        unset ($customer_info['reset_password_token']);
+        unset ($customer_info['reset_password_validity']);
+        return $customer_info;
+    }
+
     public function sendInvites($ps_shop_id) {
         if(!($shop_id = Configuration::get('WEBWINKELKEUR_SHOP_ID', null, null, $ps_shop_id))
            || !($api_key = Configuration::get('WEBWINKELKEUR_API_KEY', null, null, $ps_shop_id))
@@ -229,6 +245,8 @@ class WebwinkelKeur extends Module {
             return;
 
         foreach($orders as $order) {
+            $order_lines = $this->getOrderLines($db, $order['id_order']);
+            $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
             $db->execute("
                 UPDATE `" . _DB_PREFIX_ . "orders`
                 SET
@@ -246,7 +264,15 @@ class WebwinkelKeur extends Module {
                     'delay'     => $invite_delay,
                     'language'      => str_replace('-', '_', $order['language_code']),
                     'customername' => $order['firstname'].' '.$order['lastname'],
-                    'client'    => 'prestashop'
+                    'client'    => 'prestashop',
+                    'order_data'=> json_encode([
+                        'order' => $order,
+                        'products' => $order_lines,
+                        'customer' => $customer_info
+                    ]),
+                    'platform_version' => _PS_VERSION_,
+                    'plugin_version' => $this->version
+
                 );
                 if($invite == 2)
                     $post['noremail'] = '1';
@@ -268,10 +294,9 @@ class WebwinkelKeur extends Module {
                 if ($response === false) {
                     $success = false;
                 } else {
-                    $data = json_decode($response);
+                    $data = json_decode($response, JSON_OBJECT_AS_ARRAY);
                     $success = is_array($data) && isset ($data['status']) && $data['status'] == 'success';
                 }
-
                 if($success) {
                     $db->execute("UPDATE `" . _DB_PREFIX_ . "orders` SET webwinkelkeur_invite_sent = 1 WHERE id_order = " . (int) $order['id_order']);
                 } else {
