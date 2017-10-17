@@ -240,24 +240,39 @@ class WebwinkelKeur extends Module {
                     AND webwinkelkeur_invite_time = " . $order['webwinkelkeur_invite_time'] . "
             ");
             if($db->Affected_Rows()) {
-                $parameters = array(
-                    'id'        => $shop_id,
-                    'password'  => $api_key,
+                $post = array(
                     'email'     => $order['email'],
                     'order'     => $order['id_order'],
                     'delay'     => $invite_delay,
-                    'lang'      => str_replace('-', '_', $order['language_code']),
+                    'language'      => str_replace('-', '_', $order['language_code']),
                     'customername' => $order['firstname'].' '.$order['lastname'],
                     'client'    => 'prestashop'
                 );
                 if($invite == 2)
-                    $parameters['noremail'] = '1';
-                $url = 'http://www.webwinkelkeur.nl/api.php?' . http_build_query($parameters);
-                $retriever = new Peschar_URLRetriever();
-                $response = $retriever->retrieve($url);
-                if(preg_match('|^Success:|', $response)
-                   || preg_match('|invite already sent|', $response)
-                ) {
+                    $post['noremail'] = '1';
+
+                $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
+                $curl = curl_init($url);
+                curl_setopt_array($curl, [
+                    CURLOPT_HTTPHEADER => [
+                        "Content-type" => "application/json"
+                    ],
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => $post
+                ]);
+                $response = curl_exec($curl);
+                curl_close($curl);
+
+                if ($response === false) {
+                    $success = false;
+                } else {
+                    $data = json_decode($response);
+                    $success = is_array($data) && isset ($data['status']) && $data['status'] == 'success';
+                }
+
+                if($success) {
                     $db->execute("UPDATE `" . _DB_PREFIX_ . "orders` SET webwinkelkeur_invite_sent = 1 WHERE id_order = " . (int) $order['id_order']);
                 } else {
                     $db->execute("INSERT INTO `" . _DB_PREFIX_ . "webwinkelkeur_invite_error` SET url = '" . pSQL($url, true) . "', response = '" . pSQL($response, true) . "', time = " . time());
@@ -265,6 +280,7 @@ class WebwinkelKeur extends Module {
             }
         }
     }
+
 
     public function hookBackofficeTop() {
         if(method_exists('Shop', 'getCompleteListOfShopsID'))
