@@ -216,6 +216,11 @@ class WebwinkelKeur extends Module {
         return $results;
     }
 
+    public function getOrderAddress($db, $address_id) {
+        $query = "SELECT * FROM `" . _DB_PREFIX_ . "address` WHERE id_address = $address_id";
+        return $db->executeS($query);
+    }
+
     public function getCustomerInfo($db, $customer_id) {
         $query = "SELECT * FROM `" . _DB_PREFIX_ . "customer` WHERE id_customer = $customer_id";
         $customer_info = $db->executeS($query);
@@ -247,6 +252,14 @@ class WebwinkelKeur extends Module {
         foreach($orders as $order) {
             $order_lines = $this->getOrderLines($db, $order['id_order']);
             $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
+            $invoice_address = $this->getOrderAddress($db, $order['id_address_invoice'])[0];
+            $delivery_address = $this->getOrderAddress($db, $order['id_address_delivery'])[0];
+            $phones = array_unique(array_filter([
+                $invoice_address['phone'],
+                $invoice_address['phone_mobile'],
+                $delivery_address['phone'],
+                $delivery_address['phone_mobile']
+            ]));
             array_walk($order_lines, function (&$line) {
                 $images = Image::getImages(
                     Context::getContext()->language->id,
@@ -285,11 +298,15 @@ class WebwinkelKeur extends Module {
                     'delay'     => $invite_delay,
                     'language'      => str_replace('-', '_', $order['language_code']),
                     'customer_name' => $order['firstname'].' '.$order['lastname'],
+                    'phone_numbers' => $phones,
+                    'order_total' => $order['total_paid'],
                     'client'    => 'prestashop',
                     'order_data'=> json_encode([
                         'order' => $order,
                         'products' => $order_lines,
-                        'customer' => $customer_info
+                        'customer' => $customer_info,
+                        'delivery_address' => $delivery_address,
+                        'invoice_address' => $invoice_address
                     ]),
                     'platform_version' => _PS_VERSION_,
                     'plugin_version' => $this->version
@@ -301,13 +318,10 @@ class WebwinkelKeur extends Module {
                 $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
                 $curl = curl_init($url);
                 curl_setopt_array($curl, [
-                    CURLOPT_HTTPHEADER => [
-                        "Content-Type" => "application/json"
-                    ],
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_FOLLOWLOCATION => true,
                     CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => $post
+                    CURLOPT_POSTFIELDS => http_build_query($post),
                 ]);
                 $response = curl_exec($curl);
                 curl_close($curl);
