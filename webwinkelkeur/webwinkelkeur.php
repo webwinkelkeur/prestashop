@@ -247,6 +247,27 @@ class WebwinkelKeur extends Module {
         foreach($orders as $order) {
             $order_lines = $this->getOrderLines($db, $order['id_order']);
             $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
+            array_walk($order_lines, function (&$line) {
+                $images = Image::getImages(
+                    Context::getContext()->language->id,
+                    $line['product_id'],
+                    $line['product_attribute_id']
+                );
+                if (empty ($images)) {
+                    $images = Image::getImages(
+                        Context::getContext()->language->id,
+                        $line['product_id']
+                    );
+                }
+                $product = new Product($line['product_id'], false, Context::getContext()->language->id);
+                foreach ($images as $image) {
+                    $line['product_image'][] = (new Link())->getImageLink(
+                        $product->link_rewrite,
+                        $image['id_image'],
+                        'large_default'
+                    );
+                }
+            });
             $db->execute("
                 UPDATE `" . _DB_PREFIX_ . "orders`
                 SET
