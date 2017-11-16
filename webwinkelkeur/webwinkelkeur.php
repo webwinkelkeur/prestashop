@@ -275,7 +275,7 @@ class WebwinkelKeur extends Module {
 
                 );
                 if($invite == 2)
-                    $post['noremail'] = '1';
+                    $post['max_invitations_per_email'] = '1';
 
                 $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
                 $curl = curl_init($url);
