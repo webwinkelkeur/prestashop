@@ -241,6 +241,7 @@ class WebwinkelKeur extends Module {
             return;
         
         $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY', null, null, $ps_shop_id);
+        $with_order_data = !Configuration::get('WEBWINKELKEUR_LIMIT_ORDER_DATA', null, null, $ps_shop_id);
 
         $db = Db::getInstance();
 
@@ -250,8 +251,6 @@ class WebwinkelKeur extends Module {
             return;
 
         foreach($orders as $order) {
-            $order_lines = $this->getOrderLines($db, $order['id_order']);
-            $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
             $invoice_address = $this->getOrderAddress($db, $order['id_address_invoice'])[0];
             $delivery_address = $this->getOrderAddress($db, $order['id_address_delivery'])[0];
             $phones = array_unique(array_filter([
@@ -260,27 +259,58 @@ class WebwinkelKeur extends Module {
                 $delivery_address['phone'],
                 $delivery_address['phone_mobile']
             ]));
-            array_walk($order_lines, function (&$line) {
-                $images = Image::getImages(
-                    Context::getContext()->language->id,
-                    $line['product_id'],
-                    $line['product_attribute_id']
-                );
-                if (empty ($images)) {
+
+            $post = array(
+                'email'     => $order['email'],
+                'order'     => $order['id_order'],
+                'delay'     => $invite_delay,
+                'language'      => str_replace('-', '_', $order['language_code']),
+                'customer_name' => $order['firstname'].' '.$order['lastname'],
+                'phone_numbers' => $phones,
+                'order_total' => $order['total_paid'],
+                'client'    => 'prestashop',
+                'platform_version' => _PS_VERSION_,
+                'plugin_version' => $this->version
+
+            );
+            if($invite == 2) {
+                $post['max_invitations_per_email'] = '1';
+            }
+
+            if ($with_order_data) {
+                $order_lines = $this->getOrderLines($db, $order['id_order']);
+                $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
+
+                array_walk($order_lines, function (&$line) {
                     $images = Image::getImages(
                         Context::getContext()->language->id,
-                        $line['product_id']
+                        $line['product_id'],
+                        $line['product_attribute_id']
                     );
-                }
-                $product = new Product($line['product_id'], false, Context::getContext()->language->id);
-                foreach ($images as $image) {
-                    $line['product_image'][] = (new Link())->getImageLink(
-                        $product->link_rewrite,
-                        $image['id_image'],
-                        'large_default'
-                    );
-                }
-            });
+                    if (empty ($images)) {
+                        $images = Image::getImages(
+                            Context::getContext()->language->id,
+                            $line['product_id']
+                        );
+                    }
+                    $product = new Product($line['product_id'], false, Context::getContext()->language->id);
+                    foreach ($images as $image) {
+                        $line['product_image'][] = (new Link())->getImageLink(
+                            $product->link_rewrite,
+                            $image['id_image'],
+                            'large_default'
+                        );
+                    }
+                });
+                $post['order_data'] = json_encode([
+                    'order' => $order,
+                    'products' => $order_lines,
+                    'customer' => $customer_info,
+                    'delivery_address' => $delivery_address,
+                    'invoice_address' => $invoice_address
+                ]);
+            }
+
             $db->execute("
                 UPDATE `" . _DB_PREFIX_ . "orders`
                 SET
@@ -292,29 +322,6 @@ class WebwinkelKeur extends Module {
                     AND webwinkelkeur_invite_time = " . $order['webwinkelkeur_invite_time'] . "
             ");
             if($db->Affected_Rows()) {
-                $post = array(
-                    'email'     => $order['email'],
-                    'order'     => $order['id_order'],
-                    'delay'     => $invite_delay,
-                    'language'      => str_replace('-', '_', $order['language_code']),
-                    'customer_name' => $order['firstname'].' '.$order['lastname'],
-                    'phone_numbers' => $phones,
-                    'order_total' => $order['total_paid'],
-                    'client'    => 'prestashop',
-                    'order_data'=> json_encode([
-                        'order' => $order,
-                        'products' => $order_lines,
-                        'customer' => $customer_info,
-                        'delivery_address' => $delivery_address,
-                        'invoice_address' => $invoice_address
-                    ]),
-                    'platform_version' => _PS_VERSION_,
-                    'plugin_version' => $this->version
-
-                );
-                if($invite == 2)
-                    $post['max_invitations_per_email'] = '1';
-
                 $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
                 $curl = curl_init($url);
                 curl_setopt_array($curl, [
@@ -382,6 +389,9 @@ class WebwinkelKeur extends Module {
 
             Configuration::updateValue('WEBWINKELKEUR_RICH_SNIPPET',
                 !!tools::getValue('rich_snippet'));
+
+            Configuration::updateValue('WEBWINKELKEUR_LIMIT_ORDER_DATA',
+                !!tools::getValue('limit_order_data'));
 
             if(sizeof($errors) == 0)
                 $success = true;

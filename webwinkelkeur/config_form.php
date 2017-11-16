@@ -92,6 +92,17 @@ if(!defined('_PS_VERSION_'))
         <br class="clear" />
 
         <div class="margin-form">
+            <label class="t">
+                <input type="checkbox" name="limit_order_data" value="1" <?php if(Configuration::get('WEBWINKELKEUR_LIMIT_ORDER_DATA')) echo 'checked '; ?>/>
+                <?=$this->l('Do not send order information to WebwinkelKeur')?>
+            </label>
+            <p class="preference_description">
+                <?=$this->l('Please note: not all WebwinkelKeur functionality will be available if you check this option!')?>
+            </p>
+        </div>
+        <br class="clear" />
+
+        <div class="margin-form">
             <input class="button" type="submit" value="<?=$this->l('Opslaan');?>" />
         </div>
     </fieldset>
