@@ -263,7 +263,7 @@ class WebwinkelKeur extends Module {
                     'order'     => $order['id_order'],
                     'delay'     => $invite_delay,
                     'language'      => str_replace('-', '_', $order['language_code']),
-                    'customername' => $order['firstname'].' '.$order['lastname'],
+                    'customer_name' => $order['firstname'].' '.$order['lastname'],
                     'client'    => 'prestashop',
                     'order_data'=> json_encode([
                         'order' => $order,
@@ -281,7 +281,7 @@ class WebwinkelKeur extends Module {
                 $curl = curl_init($url);
                 curl_setopt_array($curl, [
                     CURLOPT_HTTPHEADER => [
-                        "Content-type" => "application/json"
+                        "Content-Type" => "application/json"
                     ],
                     CURLOPT_RETURNTRANSFER => true,
                     CURLOPT_FOLLOWLOCATION => true,
