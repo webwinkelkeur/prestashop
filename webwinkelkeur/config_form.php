@@ -62,8 +62,6 @@ if(!defined('_PS_VERSION_'))
             </label>
             <input type="radio" name="invite" id="webwinkelkeur-invite-off" value="" <?php if(!Configuration::get('WEBWINKELKEUR_INVITE')) echo 'checked'; ?> />
             <label class="t" for="webwinkelkeur-invite-off">Nee</label>
-
-            <p class="preference_description"><?=$this->l('Deze functionaliteit is alleen beschikbaar voor Plus-leden.');?></p>
         </div>
 
         <label for="adv_link"><?=$this->l('Wachttijd voor uitnodiging');?></label>
