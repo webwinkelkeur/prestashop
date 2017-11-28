@@ -3,6 +3,8 @@
 if(!defined('_PS_VERSION_'))
     exit;
 
+require_once dirname(__FILE__) . '/vendor/Peschar/URLRetriever.php';
+
 class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
@@ -323,16 +325,8 @@ class WebwinkelKeur extends Module {
             ");
             if($db->Affected_Rows()) {
                 $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
-                $curl = curl_init($url);
-                curl_setopt_array($curl, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_POST => true,
-                    CURLOPT_POSTFIELDS => http_build_query($post),
-                    CURLOPT_SSL_VERIFYPEER => false
-                ]);
-                $response = curl_exec($curl);
-                curl_close($curl);
+                $retriever = new Peschar_URLRetriever();
+                $response = $retriever->retrieve($url, $post);
 
                 if ($response === false) {
                     $success = false;
