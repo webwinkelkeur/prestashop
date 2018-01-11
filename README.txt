@@ -7,7 +7,7 @@ installatieinstructies.
 
 De module is getest met PrestaShop versies 1.6.0.0 tot en met 1.7.2.4.
 
-(C) 2013 Albert Peschar <albert@peschar.net>
+(C) 2013-2017 Albert Peschar, Kibo IT <info@kiboit.com>
 
 
 Installatieinstructies
