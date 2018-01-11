@@ -92,10 +92,10 @@ if(!defined('_PS_VERSION_'))
         <div class="margin-form">
             <label class="t">
                 <input type="checkbox" name="limit_order_data" value="1" <?php if(Configuration::get('WEBWINKELKEUR_LIMIT_ORDER_DATA')) echo 'checked '; ?>/>
-                <?=$this->l('Do not send order information to WebwinkelKeur')?>
+                <?=$this->l('Stuur geen uitgebreide informatie over bestellingen naar WebwinkelKeur')?>
             </label>
             <p class="preference_description">
-                <?=$this->l('Please note: not all WebwinkelKeur functionality will be available if you check this option!')?>
+                <?=$this->l('Standaard sturen we informatie over de klant en de bestelde producten mee bij het aanvragen van uitnodigingen, zodat we extra mogelijkheden kunnen bieden. Als u hier een vinkje zet, gebeurt dat niet, en is niet alle WebwinkelKeur-functionaliteit beschikbaar.')?>
             </p>
         </div>
         <br class="clear" />
