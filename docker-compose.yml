@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+    web:
+        build: ./docker
+        volumes:
+            - ./www:/var/www/localhost/htdocs
+        networks:
+            default:
+                ipv4_address: 172.24.0.2
+
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 172.24.0.0/24
