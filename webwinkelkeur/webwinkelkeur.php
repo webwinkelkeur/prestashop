@@ -35,9 +35,9 @@ class WebwinkelKeur extends Module {
 
         Db::getInstance()->execute("
             ALTER TABLE `" . _DB_PREFIX_ . "orders`
-                ADD COLUMN `webwinkelkeur_invite_sent` tinyint(1) NOT NULL,
-                ADD COLUMN `webwinkelkeur_invite_tries` int NOT NULL,
-                ADD COLUMN `webwinkelkeur_invite_time` int NOT NULL,
+                ADD COLUMN `webwinkelkeur_invite_sent` tinyint(1) NOT NULL DEFAULT 0,
+                ADD COLUMN `webwinkelkeur_invite_tries` int NOT NULL DEFAULT 0,
+                ADD COLUMN `webwinkelkeur_invite_time` int NOT NULL DEFAULT 0,
                 ADD KEY `webwinkelkeur_invite_sent`
                     (`webwinkelkeur_invite_sent`, `webwinkelkeur_invite_tries`)
         ");
@@ -175,10 +175,10 @@ class WebwinkelKeur extends Module {
             LEFT JOIN `" . _DB_PREFIX_ . "address` a ON o.id_address_invoice = a.id_address
             LEFT JOIN `" . _DB_PREFIX_ . "lang` l ON o.id_lang = l.id_lang
             WHERE
-                o.webwinkelkeur_invite_sent = 0
+                COALESCE(o.webwinkelkeur_invite_sent, 0) = 0
                 AND o.id_shop = $ps_shop_id
-                AND o.webwinkelkeur_invite_tries < 10
-                AND o.webwinkelkeur_invite_time < $max_time
+                AND COALESCE(o.webwinkelkeur_invite_tries, 0) < 10
+                AND COALESCE(o.webwinkelkeur_invite_time, 0) < $max_time
                 AND os.shipped = 1
         ");
 
@@ -201,9 +201,9 @@ class WebwinkelKeur extends Module {
                 LEFT JOIN `" . _DB_PREFIX_ . "address` a ON o.id_address_invoice = a.id_address
                 LEFT JOIN `" . _DB_PREFIX_ . "lang` l ON o.id_lang = l.id_lang
                 WHERE
-                    o.webwinkelkeur_invite_sent = 0
-                    AND o.webwinkelkeur_invite_tries < 10
-                    AND o.webwinkelkeur_invite_time < $max_time
+                    COALESCE(o.webwinkelkeur_invite_sent, 0) = 0
+                    AND COALESCE(o.webwinkelkeur_invite_tries, 0) < 10
+                    AND COALESCE(o.webwinkelkeur_invite_time, 0) < $max_time
                     AND osl.template = 'shipped'
                 GROUP BY
                     o.id_order
@@ -320,8 +320,8 @@ class WebwinkelKeur extends Module {
                     webwinkelkeur_invite_time = " . time() . "
                 WHERE
                     id_order = " . $order['id_order'] . "
-                    AND webwinkelkeur_invite_tries = " . $order['webwinkelkeur_invite_tries'] . "
-                    AND webwinkelkeur_invite_time = " . $order['webwinkelkeur_invite_time'] . "
+                    AND COALESCE(webwinkelkeur_invite_tries, 0) = " . (int) $order['webwinkelkeur_invite_tries'] . "
+                    AND COALESCE(webwinkelkeur_invite_time, 0) = " . (int) $order['webwinkelkeur_invite_time'] . "
             ");
             if($db->Affected_Rows()) {
                 $url = "https://dashboard.webwinkelkeur.nl/api/1.0/invitations.json?id=" . $shop_id . "&code=" . $api_key;
