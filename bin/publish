@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
 cd `dirname "$0"`/..
+git push origin master
 ./bin/package
 scp dist/prestashop-webwinkelkeur.zip wwk16@atlas:public_html/download/modules/
