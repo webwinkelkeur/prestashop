@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 cd `dirname "$0"`/..
-git push origin master
+
+git push github.com:apeschar/prestashop-webwinkelkeur.git master
+
 ./bin/package
 scp dist/prestashop-webwinkelkeur.zip wwk16@atlas:public_html/download/modules/
