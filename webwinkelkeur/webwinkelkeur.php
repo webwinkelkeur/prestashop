@@ -9,7 +9,7 @@ class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.3.0';
+        $this->version = '1.3.2';
         $this->author = '<a href="https://kiboit.com">Kibo IT</a>';
         $this->need_instance = 0;
         $this->module_key = '905d0071afeef0d6aaf724f0a8bb801f';
