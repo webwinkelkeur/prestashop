@@ -24,15 +24,6 @@ class WebwinkelKeur extends Module {
         if(!parent::install())
             return false;
 
-        if(!$this->registerHook('header'))
-            return false;
-
-        if(!$this->registerHook('footer'))
-            return false;
-
-        if(!$this->registerHook('backOfficeTop'))
-            return false;
-
         Db::getInstance()->execute("
             ALTER TABLE `" . _DB_PREFIX_ . "orders`
                 ADD COLUMN `webwinkelkeur_invite_sent` tinyint(1) NOT NULL DEFAULT 0,
@@ -387,6 +378,10 @@ class WebwinkelKeur extends Module {
 
             Configuration::updateValue('WEBWINKELKEUR_LIMIT_ORDER_DATA',
                 !!tools::getValue('limit_order_data'));
+
+            $this->registerHook('header');
+            $this->registerHook('footer');
+            $this->registerHook('backOfficeTop');
 
             if(sizeof($errors) == 0)
                 $success = true;
