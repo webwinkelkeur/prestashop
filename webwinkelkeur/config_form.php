@@ -67,7 +67,7 @@ if(!defined('_PS_VERSION_'))
         <label for="adv_link"><?=$this->l('Wachttijd voor uitnodiging');?></label>
         <div class="margin-form">
             <input id="adv_link" type="text" name="invite_delay" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_DELAY'));?>" style="width:50px" />
-            <p class="preference_description"><?=$this->l('De uitnodiging wordt verstuurd nadat het opgegeven aantal dagen is verstreken.');?></p>
+            <p class="preference_description"><?=$this->l('De uitnodiging wordt verstuurd zodra de bestelling als verzonden is gemarkeerd, en daarna het opgegeven aantal dagen is verstreken.');?></p>
         </div>
         <br class="clear" />
 
