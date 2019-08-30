@@ -1,15 +1,14 @@
 #!/bin/bash
-set -eu
 
-cd `dirname "$0"`
-cd ..
+set -euo pipefail
 
-rm -rf dist
+cd "$(dirname "$0")/.."
+
+git checkout master
+git push origin master
+
+version="$(git describe --tags --match 'v*')"
+
+echo "Packaging version $version..." >&2
 mkdir -p dist
-
-git archive master webwinkelkeur |  tar -x -C dist
-cp README.txt dist/webwinkelkeur
-cd dist
-zip -r prestashop-webwinkelkeur.zip webwinkelkeur
-rm -rf webwinkelkeur README.txt
-
+git archive -o "dist/prestashop-webwinkelkeur-$version.zip" master -- webwinkelkeur
