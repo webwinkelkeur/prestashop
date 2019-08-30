@@ -4,10 +4,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 version="$(git describe --tags --match 'v*' | sed 's/^v//')"
-out="$PWD/dist/prestashop-webwinkelkeur-$version.zip"
+out="$PWD/dist/prestashop-webwinkelkeur.zip"
 
 echo "Packaging version $version..." >&2
 
+rm -rf dist
 mkdir -p dist
 
 tmp="$(mktemp -d)"
