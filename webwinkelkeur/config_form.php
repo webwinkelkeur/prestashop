@@ -32,7 +32,7 @@ if(!defined('_PS_VERSION_'))
             </label>
             <input type="radio" name="javascript" id="webwinkelkeur-javascript-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_JAVASCRIPT')) echo 'checked'; ?> />
             <label class="t" for="webwinkelkeur-javascript-on">Ja</label>
-            
+
             <label class="t" for="webwinkelkeur-javascript-off">
                 <img src="../img/admin/disabled.gif" alt="" />
             </label>
@@ -67,7 +67,10 @@ if(!defined('_PS_VERSION_'))
         <label for="adv_link"><?=$this->l('Wachttijd voor uitnodiging');?></label>
         <div class="margin-form">
             <input id="adv_link" type="text" name="invite_delay" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_DELAY'));?>" style="width:50px" />
-            <p class="preference_description"><?=$this->l('De uitnodiging wordt verstuurd zodra de bestelling als verzonden is gemarkeerd, en daarna het opgegeven aantal dagen is verstreken.');?></p>
+            <p class="preference_description">
+                <?=$this->l('De uitnodiging wordt verstuurd zodra de bestelling als verzonden is gemarkeerd, en daarna het opgegeven aantal dagen is verstreken.');?>
+                <?=$this->l('Uitnodigingen worden alleen verstuurd voor bestellingen die zijn geplaatst nadat de module is geïnstalleerd.');?>
+            </p>
         </div>
         <br class="clear" />
 
@@ -78,7 +81,7 @@ if(!defined('_PS_VERSION_'))
             </label>
             <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-on" value="1" <?php if(Configuration::get('WEBWINKELKEUR_RICH_SNIPPET')) echo 'checked'; ?> />
             <label class="t" for="webwinkelkeur-rich-snippet-on">Ja</label>
-            
+
             <label class="t" for="webwinkelkeur-rich-snippet-off">
                 <img src="../img/admin/disabled.gif" alt="" />
             </label>
