@@ -1,8 +1,12 @@
 #!/bin/bash
-set -eu
-cd `dirname "$0"`/..
 
-git push github.com:apeschar/prestashop-webwinkelkeur.git master
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+git checkout master
+git push --tags origin master
+git push --tags github.com:apeschar/prestashop-webwinkelkeur.git master
 
 ./bin/package
-scp dist/prestashop-webwinkelkeur.zip wwk16@atlas:public_html/download/modules/
+
+rsync -av dist/prestashop-webwinkelkeur.zip wwk16@atlas:public_html/download/modules/
