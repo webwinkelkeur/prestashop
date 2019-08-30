@@ -10,7 +10,7 @@ class WebwinkelKeur extends Module {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
         $this->version = '1.3.2';
-        $this->author = '<a href="https://kiboit.com">Kibo IT</a>';
+        $this->author = 'Albert Peschar (kiboit.com)';
         $this->need_instance = 0;
         $this->module_key = '905d0071afeef0d6aaf724f0a8bb801f';
 
