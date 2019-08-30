@@ -9,13 +9,13 @@ class WebwinkelKeur extends Module {
     public function __construct() {
         $this->name = 'webwinkelkeur';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.3.2';
+        $this->version = '$VERSION$';
         $this->author = 'Albert Peschar (kiboit.com)';
         $this->need_instance = 0;
         $this->module_key = '905d0071afeef0d6aaf724f0a8bb801f';
 
         parent::__construct();
-        
+
         $this->displayName = $this->l('WebwinkelKeur');
         $this->description = $this->l('Integreer de WebwinkelKeur sidebar in uw webwinkel.');
     }
@@ -37,7 +37,7 @@ class WebwinkelKeur extends Module {
             UPDATE `" . _DB_PREFIX_ . "orders`
                 SET `webwinkelkeur_invite_sent` = 1
         ");
-        
+
         Db::getInstance()->execute("
             CREATE TABLE IF NOT EXISTS
                 `" . _DB_PREFIX_ . "webwinkelkeur_invite_error`
@@ -144,7 +144,7 @@ class WebwinkelKeur extends Module {
 
         if($fp)
             @fclose($fp);
-        
+
         if($data['result'] == 'ok')
             return $data['content'];
     }
@@ -232,7 +232,7 @@ class WebwinkelKeur extends Module {
            || !($invite = Configuration::get('WEBWINKELKEUR_INVITE', null, null, $ps_shop_id))
         )
             return;
-        
+
         $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY', null, null, $ps_shop_id);
         $with_order_data = !Configuration::get('WEBWINKELKEUR_LIMIT_ORDER_DATA', null, null, $ps_shop_id);
 
