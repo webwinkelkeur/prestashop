@@ -66,10 +66,18 @@ if(!defined('_PS_VERSION_'))
 
         <label for="adv_link"><?=$this->l('Wachttijd voor uitnodiging');?></label>
         <div class="margin-form">
-            <input id="adv_link" type="text" name="invite_delay" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_DELAY'));?>" style="width:50px" />
+            <input id="adv_link" type="number" required min="0" name="invite_delay" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_DELAY', null, null, null, 3));?>" style="width:50px" />
             <p class="preference_description">
                 <?=$this->l('De uitnodiging wordt verstuurd zodra de bestelling als verzonden is gemarkeerd, en daarna het opgegeven aantal dagen is verstreken.');?>
-                <?=$this->l('Uitnodigingen worden alleen verstuurd voor bestellingen die zijn geplaatst nadat de module is geïnstalleerd.');?>
+            </p>
+        </div>
+        <br class="clear" />
+
+        <label for="adv_link"><?=$this->l('Minimum ordernummer');?></label>
+        <div class="margin-form">
+            <input id="adv_link" type="number" required min="1" name="invite_first_order_id" value="<?=$this->escape(Configuration::get('WEBWINKELKEUR_INVITE_FIRST_ORDER_ID', null, null, null, $this->getLastOrderId() + 1));?>" style="width:50px" />
+            <p class="preference_description">
+                <?=$this->l('Verstuur uitnodigingen vanaf dit ordernummer. Bij installatie wordt dit automatisch op het eerstvolgende ordernummer gezet.');?>
             </p>
         </div>
         <br class="clear" />

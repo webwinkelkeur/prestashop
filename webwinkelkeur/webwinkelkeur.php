@@ -34,11 +34,6 @@ class WebwinkelKeur extends Module {
         ");
 
         Db::getInstance()->execute("
-            UPDATE `" . _DB_PREFIX_ . "orders`
-                SET `webwinkelkeur_invite_sent` = 1
-        ");
-
-        Db::getInstance()->execute("
             CREATE TABLE IF NOT EXISTS
                 `" . _DB_PREFIX_ . "webwinkelkeur_invite_error`
             (
@@ -149,7 +144,11 @@ class WebwinkelKeur extends Module {
             return $data['content'];
     }
 
-    public function getOrdersToInvite($db, $ps_shop_id) {
+    public function getOrdersToInvite($db, $ps_shop_id, $first_order_id) {
+        if ($first_order_id < 1) {
+            return [];
+        }
+
         $max_time = time() - 1800;
 
         $query = $db->executeS("
@@ -171,34 +170,10 @@ class WebwinkelKeur extends Module {
                 AND COALESCE(o.webwinkelkeur_invite_tries, 0) < 10
                 AND COALESCE(o.webwinkelkeur_invite_time, 0) < $max_time
                 AND os.shipped = 1
+                AND o.id_order >= " . (int) $first_order_id . "
+            ORDER BY RAND()
+            LIMIT 10
         ");
-
-        if($query === false)
-            $query = $db->executeS("
-                SELECT
-                    o.*,
-                    c.email,
-                a.firstname,
-                a.lastname,
-                l.language_code
-                FROM `" . _DB_PREFIX_ . "orders` o
-                INNER JOIN `" . _DB_PREFIX_ . "order_history` oh ON
-                    oh.id_order = o.id_order
-                INNER JOIN `" . _DB_PREFIX_ . "order_state` os ON
-                    os.id_order_state = oh.id_order_state
-                INNER JOIN `" . _DB_PREFIX_ . "order_state_lang` osl ON
-                    osl.id_order_state = osl.id_order_state
-                INNER JOIN `" . _DB_PREFIX_ . "customer` c USING (id_customer)
-                LEFT JOIN `" . _DB_PREFIX_ . "address` a ON o.id_address_invoice = a.id_address
-                LEFT JOIN `" . _DB_PREFIX_ . "lang` l ON o.id_lang = l.id_lang
-                WHERE
-                    COALESCE(o.webwinkelkeur_invite_sent, 0) = 0
-                    AND COALESCE(o.webwinkelkeur_invite_tries, 0) < 10
-                    AND COALESCE(o.webwinkelkeur_invite_time, 0) < $max_time
-                    AND osl.template = 'shipped'
-                GROUP BY
-                    o.id_order
-            ");
 
         return $query;
     }
@@ -234,11 +209,12 @@ class WebwinkelKeur extends Module {
             return;
 
         $invite_delay = (int) Configuration::get('WEBWINKELKEUR_INVITE_DELAY', null, null, $ps_shop_id);
+        $first_order_id = (int) Configuration::get('WEBWINKELKEUR_INVITE_FIRST_ORDER_ID', null, null, $ps_shop_id);
         $with_order_data = !Configuration::get('WEBWINKELKEUR_LIMIT_ORDER_DATA', null, null, $ps_shop_id);
 
         $db = Db::getInstance();
 
-        $orders = $this->getOrdersToInvite($db, $ps_shop_id);
+        $orders = $this->getOrdersToInvite($db, $ps_shop_id, $first_order_id);
 
         if(!$orders)
             return;
@@ -336,11 +312,9 @@ class WebwinkelKeur extends Module {
 
 
     public function hookBackofficeTop() {
-        if(method_exists('Shop', 'getCompleteListOfShopsID'))
-            foreach(Shop::getCompleteListOfShopsID() as $shop)
-                $this->sendInvites($shop);
-        else
-            $this->sendInvites(null);
+        foreach(Shop::getCompleteListOfShopsID() as $shop) {
+            $this->sendInvites($shop);
+        }
     }
 
     public function getContent() {
@@ -369,6 +343,10 @@ class WebwinkelKeur extends Module {
             $invite_delay = tools::getValue('invite_delay');
             if(strlen($invite_delay) == 0) $invite_delay = 3;
             Configuration::updateValue('WEBWINKELKEUR_INVITE_DELAY', (int) $invite_delay);
+
+            Configuration::updateValue('WEBWINKELKEUR_INVITE_FIRST_ORDER_ID',
+                (int) tools::getValue('invite_first_order_id'));
+            $this->fixUnsentOrders(Configuration::get('WEBWINKELKEUR_INVITE_FIRST_ORDER_ID'));
 
             Configuration::updateValue('WEBWINKELKEUR_JAVASCRIPT',
                 !!tools::getValue('javascript'));
@@ -402,6 +380,26 @@ class WebwinkelKeur extends Module {
             echo $this->displayConfirmation($this->l('Uw wijzigingen zijn opgeslagen.'));
         require dirname(__FILE__) . '/config_form.php';
         return ob_get_clean();
+    }
+
+    private function fixUnsentOrders($first_order_id) {
+        Db::getInstance()->execute("
+            UPDATE `" . _DB_PREFIX_ . "orders`
+            SET
+                webwinkelkeur_invite_sent = 0
+            WHERE
+                webwinkelkeur_invite_sent = 1
+                AND (webwinkelkeur_invite_tries IS NULL OR webwinkelkeur_invite_tries = 0)
+                AND id_order >= " . (int) $first_order_id . "
+                AND " . (Shop::isFeatureActive() ? "id_shop = " . (int) Shop::getContextShopID() : "1") . "
+        ");
+    }
+
+    private function getLastOrderId() {
+        $result = Db::getInstance()->executeS("
+            SELECT MAX(id_order) id_order FROM `" . _DB_PREFIX_ . "orders`
+        ");
+        return $result ? $result[0]['id_order'] : 0;
     }
 
     public function escape($string) {
