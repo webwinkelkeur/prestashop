@@ -5,7 +5,6 @@ cd "$(dirname "$0")/.."
 
 git checkout master
 git push --tags origin master
-git push --tags git@github.com:apeschar/prestashop-webwinkelkeur.git master
 
 ./bin/package
 
