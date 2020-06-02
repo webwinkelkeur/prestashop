@@ -1,7 +1,14 @@
 <?php
 namespace Valued\PrestaShop;
 
+use Configuration;
+use Context;
+use Db;
+use Image;
+use Link;
 use Module as PSModule;
+use Shop;
+use Tools;
 
 abstract class Module extends PSModule {
     /** @return string */
@@ -10,10 +17,16 @@ abstract class Module extends PSModule {
     /** @return string */
     abstract protected function getDisplayName();
 
+    /** @return string */
+    abstract protected function getDashboardDomain();
+
+    /** @return string */
+    abstract protected function getMainDomain();
+
     public function __construct() {
         $this->name = $this->getName();
-        $this->tab = 'advertising_marketing';
-        $this->version = '$VERSION$';
+        $this->tab = 'pricing_promotion';
+        $this->version = '$VERSION$'; // @phan-suppress-current-line PhanTypeMismatchProperty
         $this->author = 'Albert Peschar (kiboit.com)';
         $this->need_instance = 0;
         $this->module_key = $this->getModuleKey();
@@ -333,7 +346,7 @@ abstract class Module extends PSModule {
                 if ($response === false) {
                     $success = false;
                 } else {
-                    $data = json_decode($response, JSON_OBJECT_AS_ARRAY);
+                    $data = json_decode($response, true);
                     $success = is_array($data) && isset($data['status']) && $data['status'] == 'success';
                 }
                 if ($success) {
@@ -356,15 +369,15 @@ abstract class Module extends PSModule {
         $errors = [];
         $success = false;
 
-        if (tools::isSubmit($this->getName())) {
-            $shop_id = tools::getValue('shop_id');
+        if (Tools::isSubmit($this->getName())) {
+            $shop_id = Tools::getValue('shop_id');
             if (strlen($shop_id)) {
                 $shop_id = (int) $shop_id;
             } else {
                 $shop_id = '';
             }
 
-            $api_key = tools::getValue('api_key');
+            $api_key = Tools::getValue('api_key');
 
             if (!$shop_id || !$api_key) {
                 $errors[] = $this->l('Om de sidebar weer te geven of uitnodigingen te versturen, zijn uw webwinkel en API key vereist.');
@@ -375,10 +388,10 @@ abstract class Module extends PSModule {
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),
-                (int) tools::getValue('invite')
+                (int) Tools::getValue('invite')
             );
 
-            $invite_delay = tools::getValue('invite_delay');
+            $invite_delay = Tools::getValue('invite_delay');
             if (strlen($invite_delay) == 0) {
                 $invite_delay = 3;
             }
@@ -386,23 +399,23 @@ abstract class Module extends PSModule {
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE_FIRST_ORDER_ID'),
-                (int) tools::getValue('invite_first_order_id')
+                (int) Tools::getValue('invite_first_order_id')
             );
             $this->fixUnsentOrders(Configuration::get($this->getConfigName('INVITE_FIRST_ORDER_ID')));
 
             Configuration::updateValue(
                 $this->getConfigName('JAVASCRIPT'),
-                !!tools::getValue('javascript')
+                !!Tools::getValue('javascript')
             );
 
             Configuration::updateValue(
                 $this->getConfigName('RICH_SNIPPET'),
-                !!tools::getValue('rich_snippet')
+                !!Tools::getValue('rich_snippet')
             );
 
             Configuration::updateValue(
                 $this->getConfigName('LIMIT_ORDER_DATA'),
-                !!tools::getValue('limit_order_data')
+                !!Tools::getValue('limit_order_data')
             );
 
             $this->registerHook('header');
@@ -455,5 +468,21 @@ abstract class Module extends PSModule {
 
     private function escape($string) {
         return htmlentities($string, ENT_QUOTES, 'UTF-8');
+    }
+
+    private function getTableName($name) {
+        return _DB_PREFIX_ . $name;
+    }
+
+    private function getConfigName($name) {
+        return strtoupper($this->getName()) . '_' . $name;
+    }
+
+    private function getPluginColumnName($name) {
+        return $this->getName() . '_' . $name;
+    }
+
+    private function getPluginTableName($name) {
+        return $this->getName() . '_' . $name;
     }
 }

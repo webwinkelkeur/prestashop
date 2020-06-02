@@ -6,16 +6,20 @@ return [
         'common/',
         'webwinkelkeur/',
         'trustprofile/',
+        'www/classes/',
+        'stubs/',
     ],
     'exclude_analysis_directory_list' => [
         'common/templates/',
+        'www/classes/',
+        'stubs/',
     ],
+    'exclude_file_regex' => '~/common/~',
     'plugins' => [
         'AlwaysReturnPlugin',
         'UnreachableCodePlugin',
         'DollarDollarPlugin',
         'DuplicateArrayKeyPlugin',
         'PregRegexCheckerPlugin',
-        'PrintfCheckerPlugin',
     ],
 ];
