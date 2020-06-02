@@ -5,6 +5,7 @@ return [
     'directory_list' => [
         'common/',
         'webwinkelkeur/',
+        'trustprofile/',
     ],
     'exclude_analysis_directory_list' => [
         'common/templates/',

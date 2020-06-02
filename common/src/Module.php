@@ -10,9 +10,6 @@ abstract class Module extends PSModule {
     /** @return string */
     abstract protected function getDisplayName();
 
-    /** @return string */
-    abstract protected function getDescription();
-
     public function __construct() {
         $this->name = $this->getName();
         $this->tab = 'advertising_marketing';
@@ -29,6 +26,10 @@ abstract class Module extends PSModule {
 
     protected function getName() {
         return strtolower(static::class);
+    }
+
+    private function getDescription() {
+        return sprintf($this->l('Integrate the %s sidebar in your store.'), $this->getDisplayName());
     }
 
     public function install() {
