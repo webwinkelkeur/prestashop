@@ -1,7 +1,8 @@
-.*.swp
 /dist
-.vagrant
-/test/node_modules
+.idea
+/.php_cs.cache
+.*.swp
 /test/error-images/*.jpg
 /test/error-images/*.png
-.idea
+/test/node_modules
+.vagrant
