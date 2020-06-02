@@ -6,3 +6,4 @@
 /test/error-images/*.png
 /test/node_modules
 .vagrant
+/www
