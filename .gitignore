@@ -2,8 +2,4 @@
 .idea
 /.php_cs.cache
 .*.swp
-/test/error-images/*.jpg
-/test/error-images/*.png
-/test/node_modules
-.vagrant
 /www
