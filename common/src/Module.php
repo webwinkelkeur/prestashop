@@ -540,8 +540,8 @@ abstract class Module extends PSModule {
         return strtoupper($this->getName()) . '_' . $name;
     }
 
-    private function getConfigValue($name) {
-        return Configuration::get($this->getConfigName($name));
+    private function getConfigValue($name, $default = null) {
+        return Configuration::get($this->getConfigName($name), null, null, null, $default);
     }
 
     private function getPluginColumnName($name) {

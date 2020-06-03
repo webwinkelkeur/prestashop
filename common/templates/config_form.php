@@ -67,7 +67,7 @@ if (!defined('_PS_VERSION_')) {
 
         <label for="adv_link"><?= $module->l('Invitation delay'); ?></label>
         <div class="margin-form">
-            <input id="adv_link" type="number" required min="0" name="invite_delay" value="<?= $module->escape($module->getConfigValue('INVITE_DELAY', null, null, null, 3)); ?>" style="width:50px">
+            <input id="adv_link" type="number" required min="0" name="invite_delay" value="<?= $module->escape($module->getConfigValue('INVITE_DELAY', 3)); ?>" style="width:50px">
             <p class="preference_description">
                 <?= $module->l('The invitation will be sent after the order has been marked as sent, and the configured amount of days has passed.'); ?>
             </p>
@@ -76,7 +76,7 @@ if (!defined('_PS_VERSION_')) {
 
         <label for="adv_link"><?= $module->l('Minimum order number'); ?></label>
         <div class="margin-form">
-            <input id="adv_link" type="number" required min="1" name="invite_first_order_id" value="<?= $module->escape($module->getConfigValue('INVITE_FIRST_ORDER_ID', null, null, null, $module->getLastOrderId() + 1)); ?>" style="width:50px">
+            <input id="adv_link" type="number" required min="1" name="invite_first_order_id" value="<?= $module->escape($module->getConfigValue('INVITE_FIRST_ORDER_ID', $module->getLastOrderId() + 1)); ?>" style="width:50px">
             <p class="preference_description">
                 <?= $module->l('Invitations will be sent starting from this order number. On installation, this is set to the next order number.'); ?>
             </p>
