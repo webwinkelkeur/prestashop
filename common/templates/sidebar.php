@@ -5,4 +5,4 @@ foreach ($settings as $name => $value) {
 }
 ?>
 </script>
-<script async src="https://<?= $main_domain; ?>/js/sidebar.js"></script>
+<script async src="https://<?= $dashboard_domain; ?>/webshops/sidebar.js"></script>

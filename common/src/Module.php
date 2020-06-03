@@ -7,6 +7,9 @@ use Db;
 use Image;
 use Link;
 use Module as PSModule;
+use PrestaShopLogger;
+use Product;
+use RuntimeException;
 use Shop;
 use Tools;
 
@@ -20,14 +23,11 @@ abstract class Module extends PSModule {
     /** @return string */
     abstract protected function getDashboardDomain();
 
-    /** @return string */
-    abstract protected function getMainDomain();
-
     public function __construct() {
         $this->name = $this->getName();
         $this->tab = 'pricing_promotion';
         $this->version = '$VERSION$'; // @phan-suppress-current-line PhanTypeMismatchProperty
-        $this->author = 'Albert Peschar (kiboit.com)';
+        $this->author = $this->getDisplayName();
         $this->need_instance = 0;
         $this->module_key = $this->getModuleKey();
 
@@ -42,7 +42,7 @@ abstract class Module extends PSModule {
     }
 
     private function getDescription() {
-        return sprintf($this->l('Integrate the %s sidebar in your store.'), $this->getDisplayName());
+        return sprintf($this->l('Integrate the %s sidebar in your store, and send review invitations.'), $this->getDisplayName());
     }
 
     public function install() {
@@ -50,7 +50,7 @@ abstract class Module extends PSModule {
             return false;
         }
 
-        Db::getInstance()->execute("
+        $this->execSQL("
             ALTER TABLE `{$this->getTableName('orders')}`
                 ADD COLUMN `{$this->getPluginColumnName('invite_sent')}` tinyint(1) NOT NULL DEFAULT 0,
                 ADD COLUMN `{$this->getPluginColumnName('invite_tries')}` int NOT NULL DEFAULT 0,
@@ -61,7 +61,7 @@ abstract class Module extends PSModule {
                 )
         ");
 
-        Db::getInstance()->execute("
+        $this->execSQL("
             CREATE TABLE IF NOT EXISTS
                 `{$this->getPluginTableName('invite_error')}`
             (
@@ -74,7 +74,7 @@ abstract class Module extends PSModule {
             ) ENGINE=MyISAM
         ");
 
-        Db::getInstance()->execute("
+        $this->execSQL("
             DELETE FROM `{$this->getPluginTableName('invite_error')}`
         ");
 
@@ -82,6 +82,17 @@ abstract class Module extends PSModule {
         Configuration::updateValue($this->getConfigName('JAVASCRIPT'), '1');
 
         return true;
+    }
+
+    private function execSQL($query) {
+        $db = Db::getInstance();
+        if ($db->execute($query) === false) {
+            throw new RuntimeException(sprintf(
+                'Database error: (%s) %s',
+                $db->getNumberError(),
+                $db->getMsgError()
+            ));
+        }
     }
 
     public function uninstall() {
@@ -93,8 +104,7 @@ abstract class Module extends PSModule {
         }
 
         Db::getInstance()->execute("
-            ALTER TABLE `{$this->getTableName('orders')}`
-            DROP KEY `{$this->getPluginColumnName('invite_sent')}`
+            DROP TABLE IF EXISTS `{$this->getPluginTableName('invite_error')}`
         ");
 
         return parent::uninstall();
@@ -113,13 +123,12 @@ abstract class Module extends PSModule {
             return "<!-- {$this->getDisplayName()}: shop_id not a number -->\n";
         }
 
-        $settings = [
-            "_{$this->getName()}_id" => (int) $shop_id,
-        ];
-
-        ob_start();
-        require dirname(__FILE__) . '/sidebar.php';
-        return ob_get_clean();
+        return $this->render('sidebar', [
+            'dashboard_domain' => $this->getDashboardDomain(),
+            'settings' => [
+                "_{$this->getName()}_id" => (int) $shop_id,
+            ],
+        ]);
     }
 
     public function hookFooter($params) {
@@ -154,33 +163,37 @@ abstract class Module extends PSModule {
         $cache_file = $tmp_dir . DIRECTORY_SEPARATOR . strtoupper($this->getName()) . '_'
             . md5(__FILE__) . '_' . md5($url);
 
-        $fp = @fopen($cache_file, 'rb');
-        if ($fp) {
-            $stat = @fstat($fp);
-        }
-
-        if ($fp && $stat && $stat['mtime'] > time() - 7200
-           && ($json = @stream_get_contents($fp))
+        if (($fp = @fopen($cache_file, 'rb'))
+            && ($stat = @fstat($fp))
+            && $stat['mtime'] > time() - 7200
+            && ($json = @stream_get_contents($fp))
         ) {
             $data = json_decode($json, true);
         } else {
-            $context = @stream_context_create([
-                'http' => ['timeout' => 3],
-            ]);
-            $json = @file_get_contents($url, false, $context);
-            if (!$json) {
-                return;
-            }
+            try {
+                $json = $this->request($url, [
+                    CURLOPT_CONNECTTIMEOUT => 2,
+                    CURLOPT_TIMEOUT => 4,
+                ]);
 
-            $data = @json_decode($json, true);
-            if (empty($data['result'])) {
-                return;
+                $data = @json_decode($json, true);
+
+                if (empty($data['result'])) {
+                    throw new RuntimeException('No JSON or no result element');
+                }
+            } catch (RuntimeException $e) {
+                return $this->consoleWarn(
+                    'Error while retrieving rich snippet: %s: %s',
+                    get_class($e),
+                    $e->getMessage()
+                );
             }
 
             $new_file = $cache_file . '.' . uniqid();
-            if (@file_put_contents($new_file, $json)) {
-                @rename($new_file, $cache_file) or @unlink($new_file);
+            if (@file_put_contents($new_file, $json) === strlen($json)) {
+                @rename($new_file, $cache_file);
             }
+            @unlink($new_file);
         }
 
         if ($fp) {
@@ -190,6 +203,18 @@ abstract class Module extends PSModule {
         if ($data['result'] == 'ok') {
             return $data['content'];
         }
+
+        if (isset($data['error'])) {
+            return $this->consoleWarn('Rich snippet error: %s', $data['error']);
+        }
+    }
+
+    private function consoleWarn($message, ...$args) {
+        if ($args) {
+            $message = sprintf($message, ...$args);
+        }
+        $message = "[{$this->getDisplayName()}] $message";
+        return sprintf('<script>console.warn(%s)</script>', json_encode($message));
     }
 
     private function getOrdersToInvite($db, $ps_shop_id, $first_order_id) {
@@ -199,7 +224,7 @@ abstract class Module extends PSModule {
 
         $max_time = time() - 1800;
 
-        return $db->executeS("
+        $result = $db->executeS("
             SELECT
                 o.*,
                 c.email,
@@ -222,6 +247,17 @@ abstract class Module extends PSModule {
             ORDER BY RAND()
             LIMIT 10
         ');
+
+        if ($result === false) {
+            PrestaShopLogger::addLog(sprintf(
+                '%s: Database error: (%s) %s',
+                $this->getName(),
+                $db->getNumberError(),
+                $db->getMsgError()
+            ), 3);
+        }
+
+        return $result;
     }
 
     private function getOrderLines($db, $order_id) {
@@ -339,20 +375,43 @@ abstract class Module extends PSModule {
             ');
 
             if ($db->Affected_Rows()) {
-                $url = 'https://' . $this->getDashboardDomain() . '/api/1.0/invitations.json?id=' . $shop_id . '&code=' . $api_key;
-                $retriever = new Peschar_URLRetriever();
-                $response = $retriever->retrieve($url, $post);
+                try {
+                    $url =
+                        'https://' . $this->getDashboardDomain() . '/api/1.0/invitations.json?' .
+                        http_build_query([
+                            'id' => $shop_id,
+                            'code' => $api_key,
+                        ]);
 
-                if ($response === false) {
-                    $success = false;
-                } else {
+                    $response = $this->request($url, [
+                        CURLOPT_POSTFIELDS => $post,
+                    ]);
+
                     $data = json_decode($response, true);
-                    $success = is_array($data) && isset($data['status']) && $data['status'] == 'success';
-                }
-                if ($success) {
+
+                    if (!isset($data['status'])) {
+                        throw new RuntimeException("Invalid response from server: {$response}");
+                    }
+
+                    if ($data['status'] != 'success') {
+                        throw new RuntimeException($data['message']);
+                    }
+
                     $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . (int) $order['id_order']);
-                } else {
-                    $db->execute("INSERT INTO `{$this->getPluginTableName('invite_error')}` SET url = '" . pSQL($url, true) . "', response = '" . pSQL($response, true) . "', time = " . time());
+
+                    PrestaShopLogger::addLog(sprintf(
+                        '%s: Requested invitation for order %s',
+                        $this->getName(),
+                        $order['id_order']
+                    ), 1, null, 'Order', $order['id_order']);
+                } catch (RuntimeException $e) {
+                    PrestaShopLogger::addLog(sprintf(
+                        '%s: Could not request invitation for order %s: %s',
+                        $this->getName(),
+                        $order['id_order'],
+                        $e->getMessage()
+                    ), 3, null, 'Order', $order['id_order']);
+                    $db->execute("INSERT INTO `{$this->getPluginTableName('invite_error')}` SET url = '" . pSQL($url, true) . "', response = '" . pSQL($e->getMessage(), true) . "', time = " . time());
                 }
             }
         }
@@ -379,8 +438,8 @@ abstract class Module extends PSModule {
 
             $api_key = Tools::getValue('api_key');
 
-            if (!$shop_id || !$api_key) {
-                $errors[] = $this->l('Om de sidebar weer te geven of uitnodigingen te versturen, zijn uw webwinkel en API key vereist.');
+            if ((!$shop_id || !$api_key) && (int) Tools::getValue('invite')) {
+                $errors[] = $this->l('To send invitations, your API key is required.');
             }
 
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
@@ -435,15 +494,18 @@ abstract class Module extends PSModule {
             ORDER BY time
         ');
 
-        ob_start();
+        $output = '';
         foreach ($errors as $error) {
-            echo $this->displayError($error);
+            $output .= $this->displayError($error);
         }
         if ($success) {
-            echo $this->displayConfirmation($this->l('Uw wijzigingen zijn opgeslagen.'));
+            $output .= $this->displayConfirmation($this->l('Your changes have been saved.'));
         }
-        require dirname(__FILE__) . '/config_form.php';
-        return ob_get_clean();
+        $output .= $this->render('config_form', [
+            'invite_errors' => $invite_errors,
+            'module' => $this,
+        ]);
+        return $output;
     }
 
     private function fixUnsentOrders($first_order_id) {
@@ -478,11 +540,53 @@ abstract class Module extends PSModule {
         return strtoupper($this->getName()) . '_' . $name;
     }
 
+    private function getConfigValue($name) {
+        return Configuration::get($this->getConfigName($name));
+    }
+
     private function getPluginColumnName($name) {
         return $this->getName() . '_' . $name;
     }
 
     private function getPluginTableName($name) {
-        return $this->getName() . '_' . $name;
+        return $this->getTableName($this->getName() . '_' . $name);
+    }
+
+    /**
+     * @param string $url
+     * @param array $options
+     * @return string
+     */
+    private function request($url, $options = []) {
+        $ch = curl_init($url);
+        if (!$ch) {
+            throw new RuntimeException('curl_init failed');
+        }
+        $options += [
+            CURLOPT_FAILONERROR => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+        ];
+        if (!curl_setopt_array($ch, $options)) {
+            throw new RuntimeException('curl_setopt_array failed');
+        }
+        $response = curl_exec($ch);
+        if ($response === false) {
+            throw new RuntimeException(sprintf(
+                'curl: (%s) %s',
+                curl_errno($ch),
+                curl_error($ch)
+            ));
+        }
+        return $response;
+    }
+
+    private function render($__template, array $__scope) {
+        return (static function () use ($__template, $__scope) {
+            extract($__scope);
+            ob_start();
+            require __DIR__ . '/../templates/' . $__template . '.php';
+            return ob_get_clean();
+        })();
     }
 }

@@ -10,4 +10,8 @@ class TrustProfile extends Valued\PrestaShop\Module {
     protected function getDisplayName() {
         return 'TrustProfile';
     }
+
+    protected function getDashboardDomain() {
+        return 'dashboard.trustprofile.io';
+    }
 }
