@@ -3,22 +3,30 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-version="$(git describe --tags --match 'v*' | sed 's/^v//')"
-out="$PWD/dist/prestashop-webwinkelkeur.zip"
+root="$PWD"
+version="$(git describe --tags --match 'v*')"
 
-echo "Packaging version $version..." >&2
-
-rm -rf dist
 mkdir -p dist
 
 tmp="$(mktemp -d)"
 cleanup() { rm -rf "$tmp"; }
 trap cleanup EXIT
 
-git archive master -- webwinkelkeur | tar xC "$tmp"
+for project in */common; do
+    cd "$root"
 
-cd "$tmp"
-perl -p -i -e 's~\$VERSION\$~'"$version"'~g' webwinkelkeur/webwinkelkeur.php
+    project="${project%/common}"
+    out="$root/dist/prestashop-$project-$version.zip"
 
-rm -f "$out"
-zip -r9 "$out" webwinkelkeur
+    git archive HEAD -- "$project" common | tar xC "$tmp"
+
+    cd "$tmp"
+    perl -p -i -e 's~\$VERSION\$~'"${version#v}"'~g' "$project/$project.php"
+
+    rm -f "$out"
+    zip -r9 "$out" "$project" >&2
+
+    rm -rf "$project"
+
+    echo "$out"
+done
