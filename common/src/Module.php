@@ -42,7 +42,7 @@ abstract class Module extends PSModule {
     }
 
     private function getDescription() {
-        return sprintf($this->l('Integrate the %s sidebar in your store, and send review invitations.'), $this->getDisplayName());
+        return sprintf($this->l('Integrate the %s sidebar in your store, and send review invitations.', 'module'), $this->getDisplayName());
     }
 
     public function install() {
@@ -439,7 +439,7 @@ abstract class Module extends PSModule {
             $api_key = Tools::getValue('api_key');
 
             if ((!$shop_id || !$api_key) && (int) Tools::getValue('invite')) {
-                $errors[] = $this->l('To send invitations, your API key is required.');
+                $errors[] = $this->l('To send invitations, your API key is required.', 'module');
             }
 
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
@@ -499,7 +499,7 @@ abstract class Module extends PSModule {
             $output .= $this->displayError($error);
         }
         if ($success) {
-            $output .= $this->displayConfirmation($this->l('Your changes have been saved.'));
+            $output .= $this->displayConfirmation($this->l('Your changes have been saved.', 'module'));
         }
         $output .= $this->render('config_form', [
             'invite_errors' => $invite_errors,
