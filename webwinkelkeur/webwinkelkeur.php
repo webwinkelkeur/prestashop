@@ -10,4 +10,8 @@ class WebwinkelKeur extends Valued\PrestaShop\Module {
     protected function getDisplayName() {
         return 'WebwinkelKeur';
     }
+
+    protected function getDashboardDomain() {
+        return 'dashboard.webwinkelkeur.nl';
+    }
 }
