@@ -3,9 +3,30 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-git checkout master
+if ! version="$(git describe --exact-match --tags --match 'v*')"; then
+    echo "No version tag for HEAD?" >&2
+    exit 1
+fi
+
 git push --tags origin master
 
 ./bin/package
 
-rsync -av dist/prestashop-webwinkelkeur.zip wwk16@atlas:public_html/download/modules/
+release_options=()
+
+for project in */common; do
+    project="${project%/common}"
+    package="dist/prestashop-$project-$version.zip"
+    release_options+=( --attach "$package" )
+
+    #if [[ $project = webwinkelkeur ]]; then
+        #echo rsync -av "$package" wwk16@atlas:public_html/download/modules/
+    #fi
+done
+
+hub release create \
+    --browse \
+    --message "WebwinkelKeur/TrustProfile for PrestaShop ${version}" \
+    --draft \
+    "${release_options[@]}" \
+    "$version"
