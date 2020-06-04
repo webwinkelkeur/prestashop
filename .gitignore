@@ -1,6 +1,6 @@
 config.xml
 /dist
 .idea
-/.php_cs.cache
+.php_cs.cache
 .*.swp
 /www
