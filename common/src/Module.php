@@ -78,8 +78,8 @@ abstract class Module extends PSModule {
             DELETE FROM `{$this->getPluginTableName('invite_error')}`
         ");
 
-        Configuration::updateValue($this->getConfigName('INVITE'), '');
-        Configuration::updateValue($this->getConfigName('JAVASCRIPT'), '1');
+        Configuration::updateGlobalValue($this->getConfigName('INVITE'), '');
+        Configuration::updateGlobalValue($this->getConfigName('JAVASCRIPT'), '1');
 
         return true;
     }
