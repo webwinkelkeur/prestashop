@@ -125,9 +125,7 @@ abstract class Module extends PSModule {
 
         return $this->render('sidebar', [
             'dashboard_domain' => $this->getDashboardDomain(),
-            'settings' => [
-                "_{$this->getName()}_id" => (int) $shop_id,
-            ],
+            'shop_id' => (int) $shop_id,
         ]);
     }
 
