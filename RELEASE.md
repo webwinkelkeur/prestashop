@@ -1,6 +1,6 @@
-= Release instructions =
+# Release instructions
 
-== GitHub ==
+## GitHub
 
 * Update changelog in `README.md`.
 * Tag the master branch:
