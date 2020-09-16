@@ -11,6 +11,10 @@ page][releases] and upload it to your shop.
 
 ## Changelog
 
+### 2.2 (2020-09-16)
+
+* Update sidebar script so that it only makes one HTTP request.
+
 ### 2.1 (2020-06-18)
 
 * Enable the JavaScript integration for all shops in a multistore install, not
