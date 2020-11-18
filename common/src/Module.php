@@ -236,15 +236,21 @@ abstract class Module extends PSModule {
             LEFT JOIN `{$this->getTableName('address')}` a ON o.id_address_invoice = a.id_address
             LEFT JOIN `{$this->getTableName('lang')}` l ON o.id_lang = l.id_lang
             WHERE
-                COALESCE(o.{$this->getPluginColumnName('invite_sent')}, 0) = 0
-                AND o.id_shop = $ps_shop_id
-                AND COALESCE(o.{$this->getPluginColumnName('invite_tries')}, 0) < 10
-                AND COALESCE(o.{$this->getPluginColumnName('invite_time')}, 0) < $max_time
+                o.id_shop = $ps_shop_id
                 AND os.shipped = 1
-                AND o.id_order >= " . (int) $first_order_id . '
+                AND o.id_order >= " . (int) $first_order_id . "
+                AND (
+                    o.{$this->getPluginColumnName('invite_sent')} = 0
+                    OR o.{$this->getPluginColumnName('invite_sent')} IS NULL
+                )
+                AND (
+                    o.{$this->getPluginColumnName('invite_tries')} < 10
+                    OR o.{$this->getPluginColumnName('invite_tries')} IS NULL
+                )
+                AND COALESCE(o.{$this->getPluginColumnName('invite_time')}, 0) < $max_time
             ORDER BY RAND()
             LIMIT 10
-        ');
+        ");
 
         if ($result === false) {
             PrestaShopLogger::addLog(sprintf(
