@@ -11,6 +11,11 @@ page][releases] and upload it to your shop.
 
 ## Changelog
 
+### 2.3 (2020-11-18)
+
+* Speed up the query that retrieves orders for which an invite should be sent,
+  by allowing the relevant indexes to be used.
+
 ### 2.2 (2020-09-16)
 
 * Update sidebar script so that it only makes one HTTP request.
