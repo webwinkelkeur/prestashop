@@ -248,7 +248,6 @@ abstract class Module extends PSModule {
                     OR o.{$this->getPluginColumnName('invite_tries')} IS NULL
                 )
                 AND COALESCE(o.{$this->getPluginColumnName('invite_time')}, 0) < $max_time
-            ORDER BY RAND()
             LIMIT 10
         ");
 
@@ -260,6 +259,8 @@ abstract class Module extends PSModule {
                 $db->getMsgError()
             ), 3);
         }
+
+        shuffle($result);
 
         return $result;
     }
