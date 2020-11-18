@@ -21,7 +21,7 @@ for project in */common; do
     git archive HEAD -- "$project" common | tar xC "$tmp"
 
     cd "$tmp"
-    perl -p -i -e 's~\$VERSION\$~'"${version#v}"'~g' "$project/$project.php"
+    perl -p -i -e 's~\$VERSION\$~'"${version#v}"'~g' "$project/common/src/Module.php"
 
     rm -f "$out"
     zip -r9 "$out" "$project" >&2
