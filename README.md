@@ -11,6 +11,10 @@ page][releases] and upload it to your shop.
 
 ## Changelog
 
+### 2.4 (2021-05-12)
+
+* Fix default configuration values for old PrestaShop versions.
+
 ### 2.3 (2020-11-18)
 
 * Speed up the query that retrieves orders for which an invite should be sent,
