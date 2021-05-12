@@ -546,7 +546,11 @@ abstract class Module extends PSModule {
     }
 
     private function getConfigValue($name, $default = null) {
-        return Configuration::get($this->getConfigName($name), null, null, null, $default);
+        $key = $this->getConfigName($name);
+        if (!Configuration::hasKey($key)) {
+            return $default;
+        }
+        return Configuration::get($key);
     }
 
     private function getPluginColumnName($name) {
