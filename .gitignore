@@ -4,3 +4,5 @@ config.xml
 .php_cs.cache
 .*.swp
 /www
+/html
+/db
