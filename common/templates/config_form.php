@@ -6,6 +6,27 @@ if (!defined('_PS_VERSION_')) {
 
 ?>
 
+    <style>
+        .custom_alert_danger {
+            background-color: rgb(251, 198, 195);
+            border: 1px solid rgb(244, 67, 54);
+            border-image: initial;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 5px;
+            color: black;
+        }
+        .custom_alert_warning {
+            background-color: #fffbd3;
+            border: 1px solid #fab000;
+            border-image: initial;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 5px;
+            color: black;
+        }
+    </style>
+
 <form action="" method="POST">
     <input type="hidden" name="<?= $module->getName(); ?>" value="1">
     <fieldset>
@@ -74,6 +95,28 @@ if (!defined('_PS_VERSION_')) {
                 <?= $module->l('The invitation will be sent after the order has been marked as sent, and the configured amount of days has passed.', 'config_form'); ?>
             </p>
         </div>
+        <label for="prod_review"><?= $module->l('Product reviews', 'config_form'); ?></label>
+        <div class="margin-form">
+            <label class="t">
+                <input
+                        type="checkbox"
+                        name="import_prod_reviews"
+                        <?= $module->getConfigValue('IMPORT_PROD_REVIEWS') ? 'checked ' : ''; ?>
+                        <?= isReviewModuleInstalled() != 'installed_and_enabled' ? 'disabled' : '' ?>
+                />
+                <?= $module->l('Import product reviews to PrestaShop', 'config_form') ?>
+            </label>
+
+            <?php if (isReviewModuleInstalled() == "installed_and_enabled"): ?>
+                <p class="preference_description">
+                    <?= sprintf($module->l('Automatically display product reviews collected using %s on your PrestaShop store', 'config_form'), $module->getDisplayName()); ?>
+                </p>
+            <?php elseif(isReviewModuleInstalled() == "not_installed"): ?>
+                <div class="custom_alert_danger">Please install the <a href="https://addons.prestashop.com/en/undownloadable/9144-product-comments.html">Product Comments</a> module to use this option.</div>
+            <?php else: ?>
+                <div class="custom_alert_warning">Please enable the Product Comments module to use this option.</div>
+            <?php endif; ?>
+        </div>
         <br class="clear">
 
         <label for="adv_link"><?= $module->l('Minimum order number', 'config_form'); ?></label>
@@ -141,3 +184,16 @@ if (!defined('_PS_VERSION_')) {
     </table>
 </fieldset>
 <?php endif; ?>
+
+<?php
+function isReviewModuleInstalled(): string {
+    if (!Module::isInstalled('productcomments')) {
+        return 'not_installed';
+    }
+    if (!Module::isEnabled('productcomments')) {
+        return 'not_enabled';
+    }
+
+    return 'installed_and_enabled';
+}
+?>
