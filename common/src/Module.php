@@ -337,31 +337,9 @@ abstract class Module extends PSModule {
             if ($with_order_data) {
                 $order_lines = $this->getOrderLines($db, $order['id_order']);
                 $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
-
-                array_walk($order_lines, function (&$line) {
-                    $images = Image::getImages(
-                        Context::getContext()->language->id,
-                        $line['product_id'],
-                        $line['product_attribute_id']
-                    );
-                    if (empty($images)) {
-                        $images = Image::getImages(
-                            Context::getContext()->language->id,
-                            $line['product_id']
-                        );
-                    }
-                    $product = new Product($line['product_id'], false, Context::getContext()->language->id);
-                    foreach ($images as $image) {
-                        $line['product_image'][] = (new Link())->getImageLink(
-                            $product->link_rewrite,
-                            $image['id_image'],
-                            'large_default'
-                        );
-                    }
-                });
                 $post['order_data'] = json_encode([
                     'order' => $order,
-                    'products' => $order_lines,
+                    'products' => $this->getParsedOrderLines($order_lines),
                     'customer' => $customer_info,
                     'delivery_address' => $delivery_address,
                     'invoice_address' => $invoice_address,
@@ -420,6 +398,22 @@ abstract class Module extends PSModule {
                 }
             }
         }
+    }
+
+    private function getParsedOrderLines($order_lines) {
+        return array_map(function ($line) {
+            $product = new Product($line['product_id'], false, Context::getContext()->language->id);
+            $img = $product->getCover($product->id);
+            $line['name'] = $line['product_name'];
+            $line['url'] = (new Link())->getProductLink($product);
+            $line['external_id'] = $line['product_id'];
+            $line['id'] = $line['product_id'];
+            $line['sku'] = $line['product_reference'];
+            $line['image_url'] = (new Link())->getImageLink($product->link_rewrite[Context::getContext()->language->id], $img['id_image'], 'large_default');
+            $line['gtin'] = $line['product_ean13'] ?? $line['product_isbn'];
+
+            return $line;
+        }, $order_lines);
     }
 
     public function hookBackofficeTop() {
