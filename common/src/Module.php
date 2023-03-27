@@ -436,7 +436,7 @@ abstract class Module extends PSModule {
             }
 
             $api_key = Tools::getValue('api_key');
-            $import_prod_reviews = Tools::getValue('import_prod_reviews') ?? false;
+            $sync_prod_reviews = Tools::getValue('sync_prod_reviews') ?? false;
 
             if ((!$shop_id || !$api_key) && (int) Tools::getValue('invite')) {
                 $errors[] = $this->l('To send invitations, your API key is required.', 'module');
@@ -444,7 +444,7 @@ abstract class Module extends PSModule {
 
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
-            Configuration::updateValue($this->getConfigName('IMPORT_PROD_REVIEWS'), (bool) $import_prod_reviews);
+            Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) $sync_prod_reviews);
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),

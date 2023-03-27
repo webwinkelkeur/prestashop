@@ -100,11 +100,11 @@ if (!defined('_PS_VERSION_')) {
             <label class="t">
                 <input
                         type="checkbox"
-                        name="import_prod_reviews"
-                        <?= $module->getConfigValue('IMPORT_PROD_REVIEWS') ? 'checked ' : ''; ?>
+                        name="sync_prod_reviews"
+                        <?= $module->getConfigValue('SYNC_PROD_REVIEWS') ? 'checked ' : ''; ?>
                         <?= isReviewModuleInstalled() != 'installed_and_enabled' ? 'disabled' : '' ?>
                 />
-                <?= $module->l('Import product reviews to PrestaShop', 'config_form') ?>
+                <?= $module->l('Sync product reviews to PrestaShop', 'config_form') ?>
             </label>
 
             <?php if (isReviewModuleInstalled() == "installed_and_enabled"): ?>
