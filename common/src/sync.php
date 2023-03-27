@@ -1,6 +1,7 @@
 <?php
 
 namespace Valued\PrestaShop;
+
 use Configuration;
 use DateTime;
 use Exception;
@@ -8,6 +9,7 @@ use ModuleFrontController;
 use PrestaShop\Module\ProductComment\Entity\ProductComment;
 use PrestaShop\PrestaShop\Adapter\Validate;
 use Product;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class sync extends ModuleFrontController {
     /**
@@ -16,26 +18,26 @@ class sync extends ModuleFrontController {
     public function postProcess() {
         $request_data = trim(file_get_contents('php://input'));
         if (!$request_data) {
-            throw new Exception('Empty request data');
+            throw new HttpException(400, 'Empty request data');
         }
         if (!$request_data = json_decode($request_data, true)) {
-            throw new Exception('Invalid JSON data provided');
+            throw new HttpException(400, 'Invalid JSON data provided');
         }
 
         if (
             !$this->hasCredentialFields($request_data['shop_id'], $request_data['api_key'])
             || $this->credentialsEmpty($request_data['shop_id'], $request_data['api_key'])
         ) {
-            throw new Exception('Missing credential fields');
+            throw new HttpException(403, 'Missing credential fields');
         }
         $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
         $product = new Product($request_data['id_product'], false, $lang_id);
         if (!Validate::isLoadedObject($product)) {
-            throw new Exception(sprintf('Could not find product with ID (%d)', $request_data['id_product']));
+            throw new HttpException(404, sprintf('Could not find product with ID (%d)', $request_data['id_product']));
         }
 
         if (!Configuration::get(strtoupper($request_data['module']) . "_SYNC_PROD_REVIEWS")) {
-            throw new Exception('Product review sync is disabled.');
+            throw new HttpException(403, 'Product review sync is disabled.');
         }
 
         $this->isAuthorized($request_data['shop_id'], $request_data['api_key'], $request_data['module']);
@@ -47,7 +49,7 @@ class sync extends ModuleFrontController {
      */
     private function syncProductReview(array $request_data): void {
         if (!$request_data['title'] || !$request_data['content'] || !$request_data['customer_name'] || !$request_data['grade']) {
-            throw new Exception('Missing required content for product review');
+            throw new HttpException(404, 'Missing required content for product review');
         }
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
         $product_comment_entity = new ProductComment();
@@ -73,7 +75,7 @@ class sync extends ModuleFrontController {
      */
     private function isAuthorized(string $shop_id, string $api_key, string $module_name): void {
         $curr_shop_id = Configuration::get(strtoupper($module_name) . '_SHOP_ID');
-        $curr_api_key = Configuration::get(strtoupper($module_name) .'_API_KEY');
+        $curr_api_key = Configuration::get(strtoupper($module_name) . '_API_KEY');
         if ($shop_id == $curr_shop_id && hash_equals($api_key, $curr_api_key)) {
             return;
         }
