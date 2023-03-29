@@ -6,6 +6,7 @@ use Context;
 use Db;
 use Image;
 use Link;
+use Matrix\Exception;
 use Module as PSModule;
 use PrestaShopLogger;
 use Product;
@@ -22,6 +23,7 @@ abstract class Module extends PSModule {
 
     /** @return string */
     abstract protected function getDashboardDomain();
+    const SYNC_URL = 'https://%s/webshops/sync_url';
 
     public function __construct() {
         $this->name = $this->getName();
@@ -81,7 +83,55 @@ abstract class Module extends PSModule {
         Configuration::updateGlobalValue($this->getConfigName('INVITE'), '');
         Configuration::updateGlobalValue($this->getConfigName('JAVASCRIPT'), '1');
 
+        $sync_url = _PS_BASE_URL_ . __PS_BASE_URI__ . sprintf('module/%s/sync', $this->getName());
+        $shop_id = (int)Context::getContext()->shop->id;
+        $this->sendSyncUrl($sync_url, $shop_id);
+
         return true;
+    }
+
+    private function sendSyncUrl(string $sync_url, int $shop_id): void {
+        if (empty(Configuration::get(strtoupper($this->getName()) . '_SYNC_PROD_REVIEWS'))) {
+            return;
+        }
+        $url = sprintf(self::SYNC_URL, $this->getDashboardDomain());
+        $data = [
+            'webshop_id' => $shop_id,
+            'api_key' => Configuration::get(strtoupper($this->getName()) . '_API_KEY'),
+            'url' => $sync_url,
+        ];
+        try {
+            $this->doSendSyncUrl($url, $data);
+        } catch (Exception $e) {
+            PrestaShopLogger::addLog(sprintf('Sending sync URL to Dashboard failed with error %s', $e->getMessage()));
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doSendSyncUrl(string $url, array $data): void {
+        $curl = curl_init();
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FAILONERROR => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
+            CURLOPT_URL => $url,
+            CURLOPT_TIMEOUT => 10,
+        ];
+        if (!curl_setopt_array($curl, $options)) {
+            throw new Exception('Could not set cURL options');
+        }
+
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
+        }
+
+        curl_close($curl);
     }
 
     private function execSQL($query) {
@@ -445,6 +495,11 @@ abstract class Module extends PSModule {
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
             Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) $sync_prod_reviews);
+            if (Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
+                $sync_url = _PS_BASE_URL_ . __PS_BASE_URI__ . sprintf('module/%s/sync', $this->getName());
+                $shop_id = Configuration::get($this->getConfigName('SHOP_ID'));
+                $this->sendSyncUrl($sync_url, $shop_id);
+            }
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),

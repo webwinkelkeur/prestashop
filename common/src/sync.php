@@ -12,6 +12,10 @@ use Product;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class sync extends ModuleFrontController {
+
+    /** @var bool */
+    public $ajax;
+
     /**
      * @throws Exception
      */
@@ -25,68 +29,82 @@ class sync extends ModuleFrontController {
         }
 
         if (
-            !$this->hasCredentialFields($request_data['shop_id'], $request_data['api_key'])
-            || $this->credentialsEmpty($request_data['shop_id'], $request_data['api_key'])
+            !$this->hasCredentialFields($request_data['webshop_id'], $request_data['api_key'])
+            || $this->credentialsEmpty($request_data['webshop_id'], $request_data['api_key'])
         ) {
             throw new HttpException(403, 'Missing credential fields');
         }
         $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
-        $product = new Product($request_data['id_product'], false, $lang_id);
+        $product = new Product($request_data['product_review']['product_id'], false, $lang_id);
         if (!Validate::isLoadedObject($product)) {
-            throw new HttpException(404, sprintf('Could not find product with ID (%d)', $request_data['id_product']));
+            throw new HttpException(404, sprintf('Could not find product with ID (%d)', $request_data['product_review']['product_id']));
         }
 
-        if (!Configuration::get(strtoupper($request_data['module']) . "_SYNC_PROD_REVIEWS")) {
+        if (!Configuration::get(strtoupper($this->module->name) . '_SYNC_PROD_REVIEWS')) {
             throw new HttpException(403, 'Product review sync is disabled.');
         }
 
-        $this->isAuthorized($request_data['shop_id'], $request_data['api_key'], $request_data['module']);
-        $this->syncProductReview($request_data);
+        $this->isAuthorized($request_data['webshop_id'], $request_data['api_key']);
+        $this->syncProductReview($request_data['product_review']);
     }
 
     /**
      * @throws Exception
      */
-    private function syncProductReview(array $request_data): void {
-        if (!$request_data['title'] || !$request_data['content'] || !$request_data['customer_name'] || !$request_data['grade']) {
+    private function syncProductReview(array $product_review) {
+        $this->ajax = 1;
+        if (
+            !$product_review['title']
+            || !$product_review['review']
+            || !$product_review['reviewer']['name']
+            || !$product_review['rating']
+        ) {
             throw new HttpException(404, 'Missing required content for product review');
         }
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
         $product_comment_entity = new ProductComment();
-        $date_add = DateTime::createFromFormat('Y-m-d H:i:s', $request_data['date_add']);
-        $product_comment_entity->setProductId($request_data['id_product'])
-            ->setCustomerId($request_data['id_customer'] ?? 0)
-            ->setGuestId($request_data['id_guest'] ?? 0)
-            ->setTitle($request_data['title'])
-            ->setContent($request_data['content'])
-            ->setCustomerName($request_data['customer_name'])
-            ->setGrade($request_data['grade'])
-            ->setValidate($request_data['validate'] ?? 1)
-            ->setDeleted($request_data['deleted'] ?? 0)
+        $date_add = DateTime::createFromFormat('Y-m-d H:i:s', date('Y-m-d H:i:s'));
+        $product_comment_entity->setProductId($product_review['product_id'])
+            ->setCustomerId(0)
+            ->setGuestId(0)
+            ->setTitle($product_review['title'])
+            ->setContent($product_review['review'])
+            ->setCustomerName($product_review['reviewer']['name'])
+            ->setGrade($product_review['rating'])
+            ->setValidate(1)
+            ->setDeleted($product_review['deleted'] ? 1 : 0)
             ->setDateAdd($date_add);
         $entity_manager->persist($product_comment_entity);
         $entity_manager->flush();
 
-        die("Successfully synced product reviews");
+        $review_id = $product_comment_entity->getId();
+        if (!$review_id) {
+            $this->ajaxRender('There has been an error syncing the review in PrestaShop');
+        } else {
+            \PrestaShopLogger::addLog(sprintf('Saved product review with ID (%d)', $review_id));
+            $this->ajaxRender(json_encode(['review_id' => $review_id], JSON_PARTIAL_OUTPUT_ON_ERROR));
+        }
+
+
     }
 
     /**
      * @throws Exception
      */
-    private function isAuthorized(string $shop_id, string $api_key, string $module_name): void {
-        $curr_shop_id = Configuration::get(strtoupper($module_name) . '_SHOP_ID');
-        $curr_api_key = Configuration::get(strtoupper($module_name) . '_API_KEY');
-        if ($shop_id == $curr_shop_id && hash_equals($api_key, $curr_api_key)) {
+    private function isAuthorized(string $webshop_id, string $api_key): void {
+        $curr_webshop_id = Configuration::get(strtoupper($this->module->name) . '_SHOP_ID');
+        $curr_api_key = Configuration::get(strtoupper($this->module->name) . '_API_KEY');
+        if ($webshop_id == $curr_webshop_id && hash_equals($api_key, $curr_api_key)) {
             return;
         }
-        throw new Exception('Wrong credentials');
+        throw new HttpException(401, 'Wrong credentials');
     }
 
-    private function hasCredentialFields(?string $shop_id, ?string $api_key): bool {
-        return isset($shop_id) && isset($api_key);
+    private function hasCredentialFields(?string $webshop_id, ?string $api_key): bool {
+        return isset($webshop_id) && isset($api_key);
     }
 
-    private function credentialsEmpty(?string $shop_id, ?string $api_key): bool {
-        return !trim($shop_id) || !trim($api_key);
+    private function credentialsEmpty(?string $webshop_id, ?string $api_key): bool {
+        return !trim($webshop_id) || !trim($api_key);
     }
 }
