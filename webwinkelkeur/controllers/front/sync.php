@@ -1,7 +1,7 @@
 <?php
 
-use Valued\PrestaShop\sync;
+use Valued\PrestaShop\Sync;
 
-class WebwinkelkeurSyncModuleFrontController extends sync {
+class WebwinkelkeurSyncModuleFrontController extends Sync {
 
 }

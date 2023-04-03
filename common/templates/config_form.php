@@ -1,5 +1,8 @@
 <?php
 
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManager;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -102,16 +105,16 @@ if (!defined('_PS_VERSION_')) {
                         type="checkbox"
                         name="sync_prod_reviews"
                         <?= $module->getConfigValue('SYNC_PROD_REVIEWS') ? 'checked ' : ''; ?>
-                        <?= isReviewModuleInstalled() != 'installed_and_enabled' ? 'disabled' : '' ?>
+                        <?= !moduleManager()->isInstalled('productcomments') || !moduleManager()->isEnabled('productcomments') ? 'disabled' : '' ?>
                 />
                 <?= $module->l('Sync product reviews to PrestaShop', 'config_form') ?>
             </label>
 
-            <?php if (isReviewModuleInstalled() == "installed_and_enabled"): ?>
+            <?php if (moduleManager()->isEnabled('productcomments')): ?>
                 <p class="preference_description">
                     <?= sprintf($module->l('Automatically display product reviews collected using %s on your PrestaShop store', 'config_form'), $module->getDisplayName()); ?>
                 </p>
-            <?php elseif(isReviewModuleInstalled() == "not_installed"): ?>
+            <?php elseif(!moduleManager()->isInstalled('productcomments')): ?>
                 <div class="custom_alert_danger">Please install the <a href="https://addons.prestashop.com/en/undownloadable/9144-product-comments.html">Product Comments</a> module to use this option.</div>
             <?php else: ?>
                 <div class="custom_alert_warning">Please enable the Product Comments module to use this option.</div>
@@ -195,5 +198,10 @@ function isReviewModuleInstalled(): string {
     }
 
     return 'installed_and_enabled';
+}
+
+function moduleManager() {
+    $moduleManagerBuilder = ModuleManagerBuilder::getInstance();
+    return $moduleManagerBuilder->build();
 }
 ?>

@@ -4,9 +4,7 @@ namespace Valued\PrestaShop;
 use Configuration;
 use Context;
 use Db;
-use Image;
 use Link;
-use Matrix\Exception;
 use Module as PSModule;
 use PrestaShopLogger;
 use Product;
@@ -83,22 +81,20 @@ abstract class Module extends PSModule {
         Configuration::updateGlobalValue($this->getConfigName('INVITE'), '');
         Configuration::updateGlobalValue($this->getConfigName('JAVASCRIPT'), '1');
 
-        $sync_url = _PS_BASE_URL_ . __PS_BASE_URI__ . sprintf('module/%s/sync', $this->getName());
-        $shop_id = (int)Context::getContext()->shop->id;
-        $this->sendSyncUrl($sync_url, $shop_id);
+        $this->sendSyncUrl();
 
         return true;
     }
 
-    private function sendSyncUrl(string $sync_url, int $shop_id): void {
-        if (empty(Configuration::get(strtoupper($this->getName()) . '_SYNC_PROD_REVIEWS'))) {
+    private function sendSyncUrl(): void {
+        if (!Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
             return;
         }
         $url = sprintf(self::SYNC_URL, $this->getDashboardDomain());
         $data = [
-            'webshop_id' => $shop_id,
-            'api_key' => Configuration::get(strtoupper($this->getName()) . '_API_KEY'),
-            'url' => $sync_url,
+            'webshop_id' => Configuration::get($this->getConfigName('SHOP_ID')),
+            'api_key' => Configuration::get($this->getConfigName('API_KEY')),
+            'url' => Context::getContext()->link->getModuleLink($this->getName(), 'sync'),
         ];
         try {
             $this->doSendSyncUrl($url, $data);
@@ -389,7 +385,7 @@ abstract class Module extends PSModule {
                 $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
                 $post['order_data'] = json_encode([
                     'order' => $order,
-                    'products' => $this->getParsedOrderLines($order_lines),
+                    'products' => $this->getProducts($order_lines),
                     'customer' => $customer_info,
                     'delivery_address' => $delivery_address,
                     'invoice_address' => $invoice_address,
@@ -450,20 +446,27 @@ abstract class Module extends PSModule {
         }
     }
 
-    private function getParsedOrderLines($order_lines) {
+    private function getProducts($order_lines) {
         return array_map(function ($line) {
             $product = new Product($line['product_id'], false, Context::getContext()->language->id);
-            $img = $product->getCover($product->id);
             $line['name'] = $line['product_name'];
             $line['url'] = (new Link())->getProductLink($product);
-            $line['external_id'] = $line['product_id'];
             $line['id'] = $line['product_id'];
             $line['sku'] = $line['product_reference'];
-            $line['image_url'] = (new Link())->getImageLink($product->link_rewrite[Context::getContext()->language->id], $img['id_image'], 'large_default');
+            $line['image_url'] = $this->getProductImage($product);
             $line['gtin'] = $line['product_ean13'] ?? $line['product_isbn'];
+            $line['mpn'] = $line['product_mpn'] ?: null;
+            $line['brand'] = $product->getWsManufacturerName();
 
             return $line;
         }, $order_lines);
+    }
+
+    private function getProductImage($product) {
+        $context = Context::getContext();
+        $img = $product->getCover($product->id);
+
+        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($img['link_rewrite'], $img['id_image'], 'large_default'));
     }
 
     public function hookBackofficeTop() {
@@ -496,9 +499,7 @@ abstract class Module extends PSModule {
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
             Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) $sync_prod_reviews);
             if (Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
-                $sync_url = _PS_BASE_URL_ . __PS_BASE_URI__ . sprintf('module/%s/sync', $this->getName());
-                $shop_id = Configuration::get($this->getConfigName('SHOP_ID'));
-                $this->sendSyncUrl($sync_url, $shop_id);
+                $this->sendSyncUrl();
             }
 
             Configuration::updateValue(
@@ -592,7 +593,7 @@ abstract class Module extends PSModule {
         return _DB_PREFIX_ . $name;
     }
 
-    private function getConfigName($name) {
+    public function getConfigName($name) {
         return strtoupper($this->getName()) . '_' . $name;
     }
 

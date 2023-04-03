@@ -1,7 +1,7 @@
 <?php
 
-use Valued\PrestaShop\sync;
+use Valued\PrestaShop\Sync;
 
-class TrustprofileSyncModuleFrontController extends sync {
+class TrustprofileSyncModuleFrontController extends Sync {
 
 }
