@@ -3,7 +3,7 @@
 namespace Valued\PrestaShop;
 
 use Configuration;
-use CustomerCore;
+use Customer;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -78,7 +78,7 @@ class Sync extends ModuleFrontController {
         }
 
         $product_comment_entity->setProductId($product_review['product_id'])
-            ->setCustomerId($customer->id ?? 0)
+            ->setCustomerId($this->getCustomerIdByEmail($product_review['reviewer']['email']) ?? 0)
             ->setGuestId(0)
             ->setTitle($product_review['title'])
             ->setContent($product_review['review'])
@@ -92,6 +92,13 @@ class Sync extends ModuleFrontController {
         $review_id = $product_comment_entity->getId();
         $this->logReviewSync($review_id);
         $this->ajaxRender(json_encode(['review_id' => $review_id], JSON_PARTIAL_OUTPUT_ON_ERROR));
+    }
+
+    private function getCustomerIdByEmail(string $email) {
+        $customer = new Customer();
+        $customer->getByEmail($email);
+
+        return $customer->id;
     }
 
     private function logReviewSync(string $review_id, bool $deleted = false) {
