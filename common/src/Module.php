@@ -446,7 +446,7 @@ abstract class Module extends PSModule {
         }
     }
 
-    private function getProducts($order_lines) {
+    private function getProducts($order_lines): array {
         return array_map(function ($line) {
             $product = new Product($line['product_id'], false, Context::getContext()->language->id);
             $line['name'] = $line['product_name'];
@@ -462,7 +462,7 @@ abstract class Module extends PSModule {
         }, $order_lines);
     }
 
-    private function getProductImage($product) {
+    private function getProductImage($product): string {
         $context = Context::getContext();
         $img = $product->getCover($product->id);
 

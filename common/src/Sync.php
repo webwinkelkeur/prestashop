@@ -21,7 +21,7 @@ class Sync extends ModuleFrontController {
     /**
      * @throws Exception
      */
-    public function postProcess() {
+    public function postProcess(): void {
         $request_data = trim(file_get_contents('php://input'));
         if (!$request_data) {
             throw new HttpException(400, 'Empty request data');
@@ -55,7 +55,7 @@ class Sync extends ModuleFrontController {
     /**
      * @throws Exception
      */
-    private function syncProductReview(array $product_review) {
+    private function syncProductReview(array $product_review): void {
         $this->ajax = 1;
         /** @var EntityManagerInterface $entityManager */
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
@@ -65,13 +65,15 @@ class Sync extends ModuleFrontController {
         if ($product_review['id']) {
             $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
             $product_comment = $product_comment_repository->find($product_review['id']);
-            if ($product_review['deleted']) {
-                $product_comment->setDeleted(1);
-                $this->logReviewSync($product_review['id'], true);
-            } else {
-                $product_comment->setDeleted(0);
-                $this->logReviewSync($product_review['id']);
-            }
+
+            $product_comment->setTitle($product_review['title'])
+                ->setContent($product_review['review'])
+                ->setCustomerName($product_review['reviewer']['name'])
+                ->setGrade($product_review['rating'])
+                ->setDeleted($product_review['deleted']);
+
+            $this->logReviewSync($product_review['id'], $product_review['deleted']);
+
             $entity_manager->flush();
             $this->ajaxRender(json_encode(['review_id' => $product_review['id']], JSON_PARTIAL_OUTPUT_ON_ERROR));
             die();
@@ -94,17 +96,15 @@ class Sync extends ModuleFrontController {
         $this->ajaxRender(json_encode(['review_id' => $review_id], JSON_PARTIAL_OUTPUT_ON_ERROR));
     }
 
-    private function getCustomerIdByEmail(string $email) {
+    private function getCustomerIdByEmail(string $email): int {
         $customer = new Customer();
         $customer->getByEmail($email);
 
         return $customer->id;
     }
 
-    private function logReviewSync(string $review_id, bool $deleted = false) {
-        $deleted
-            ? \PrestaShopLogger::addLog(sprintf('Deleted product review with ID (%d)', $review_id))
-            : \PrestaShopLogger::addLog(sprintf('Saved product review with ID (%d)', $review_id));
+    private function logReviewSync(string $review_id, bool $deleted = false): void {
+        \PrestaShopLogger::addLog(sprintf('%s product review with ID (%d)', $deleted, $review_id));
     }
 
     /**

@@ -189,17 +189,6 @@ if (!defined('_PS_VERSION_')) {
 <?php endif; ?>
 
 <?php
-function isReviewModuleInstalled(): string {
-    if (!Module::isInstalled('productcomments')) {
-        return 'not_installed';
-    }
-    if (!Module::isEnabled('productcomments')) {
-        return 'not_enabled';
-    }
-
-    return 'installed_and_enabled';
-}
-
 function moduleManager() {
     $moduleManagerBuilder = ModuleManagerBuilder::getInstance();
     return $moduleManagerBuilder->build();
