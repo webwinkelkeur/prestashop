@@ -59,27 +59,11 @@ class Sync extends ModuleFrontController {
         $this->ajax = 1;
         /** @var EntityManagerInterface $entityManager */
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
-        $product_comment_entity = new ProductComment();
         $date_add = DateTime::createFromFormat('Y-m-d H:i:s', $product_review['created']);
 
-        if ($product_review['id']) {
-            $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
-            $product_comment = $product_comment_repository->find($product_review['id']);
-
-            $product_comment->setTitle($product_review['title'])
-                ->setContent($product_review['review'])
-                ->setCustomerName($product_review['reviewer']['name'])
-                ->setGrade($product_review['rating'])
-                ->setDeleted($product_review['deleted']);
-
-            $this->logReviewSync($product_review['id'], $product_review['deleted']);
-
-            $entity_manager->flush();
-            $this->ajaxRender(json_encode(['review_id' => $product_review['id']], JSON_PARTIAL_OUTPUT_ON_ERROR));
-            die();
-        }
-
-        $product_comment_entity->setProductId($product_review['product_id'])
+        $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
+        $product_comment = $product_review['id'] ? $product_comment_repository->find($product_review['id']) : new ProductComment();
+        $product_comment->setProductId($product_review['product_id'])
             ->setCustomerId($this->getCustomerIdByEmail($product_review['reviewer']['email']) ?? 0)
             ->setGuestId(0)
             ->setTitle($product_review['title'])
@@ -88,12 +72,13 @@ class Sync extends ModuleFrontController {
             ->setGrade($product_review['rating'])
             ->setValidate(1)
             ->setDateAdd($date_add);
-        $entity_manager->persist($product_comment_entity);
-        $entity_manager->flush();
 
-        $review_id = $product_comment_entity->getId();
-        $this->logReviewSync($review_id);
-        $this->ajaxRender(json_encode(['review_id' => $review_id], JSON_PARTIAL_OUTPUT_ON_ERROR));
+            if (!$product_review['id']) {
+                $entity_manager->persist($product_comment);
+            }
+            $entity_manager->flush();
+            $this->logReviewSync($product_review['id'] ?? $product_comment->getId(), $product_review['deleted']);
+            $this->ajaxRender(json_encode(['review_id' => $product_review['id']] ?? $product_comment->getId(), JSON_PARTIAL_OUTPUT_ON_ERROR));
     }
 
     private function getCustomerIdByEmail(string $email): int {
