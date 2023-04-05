@@ -152,7 +152,7 @@ if (!defined('_PS_VERSION_')) {
         <div class="margin-form">
             <label class="t">
                 <input type="checkbox" name="limit_order_data" value="1" <?= $module->getConfigValue('LIMIT_ORDER_DATA') ? 'checked ' : ''; ?>/>
-                <?= sprintf($module->l('Do not send extended order data to %s', 'config_form'), $module->getDisplayName()); ?>
+                <?= sprintf($module->l('Do not send extended order data to %s (checking this option disables product reviews!)', 'config_form'), $module->getDisplayName()); ?>
             </label>
             <p class="preference_description">
                 <?= sprintf($module->l('By default we send details about the customer and the ordered products to our API, so that we can offer additional features. If you check this box, that will not happen, and not all %s features may be available.', 'config_form'), $module->getDisplayName()); ?>
