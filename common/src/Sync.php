@@ -89,7 +89,7 @@ class Sync extends ModuleFrontController {
     }
 
     private function logReviewSync(string $review_id, bool $deleted = false): void {
-        \PrestaShopLogger::addLog(sprintf('%s product review with ID (%d)', $deleted, $review_id));
+        \PrestaShopLogger::addLog(sprintf('%s product review with ID (%d)', $deleted ? 'Deleted' : 'Saved', $review_id));
     }
 
     /**
