@@ -1,10 +1,34 @@
 <?php
 
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManager;
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
 
 ?>
+
+    <style>
+        .custom_alert_danger {
+            background-color: rgb(251, 198, 195);
+            border: 1px solid rgb(244, 67, 54);
+            border-image: initial;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 5px;
+            color: black;
+        }
+        .custom_alert_warning {
+            background-color: #fffbd3;
+            border: 1px solid #fab000;
+            border-image: initial;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 5px;
+            color: black;
+        }
+    </style>
 
 <form action="" method="POST">
     <input type="hidden" name="<?= $module->getName(); ?>" value="1">
@@ -74,6 +98,28 @@ if (!defined('_PS_VERSION_')) {
                 <?= $module->l('The invitation will be sent after the order has been marked as sent, and the configured amount of days has passed.', 'config_form'); ?>
             </p>
         </div>
+        <label for="prod_review"><?= $module->l('Product reviews', 'config_form'); ?></label>
+        <div class="margin-form">
+            <label class="t">
+                <input
+                        type="checkbox"
+                        name="sync_prod_reviews"
+                        <?= $module->getConfigValue('SYNC_PROD_REVIEWS') ? 'checked ' : ''; ?>
+                        <?= !moduleManager()->isInstalled('productcomments') || !moduleManager()->isEnabled('productcomments') ? 'disabled' : '' ?>
+                />
+                <?= $module->l('Sync product reviews to PrestaShop', 'config_form') ?>
+            </label>
+
+            <?php if (moduleManager()->isEnabled('productcomments')): ?>
+                <p class="preference_description">
+                    <?= sprintf($module->l('Automatically display product reviews collected using %s on your PrestaShop store', 'config_form'), $module->getDisplayName()); ?>
+                </p>
+            <?php elseif(!moduleManager()->isInstalled('productcomments')): ?>
+                <div class="custom_alert_danger">Please install the <a href="https://addons.prestashop.com/en/undownloadable/9144-product-comments.html">Product Comments</a> module to use this option.</div>
+            <?php else: ?>
+                <div class="custom_alert_warning">Please enable the Product Comments module to use this option.</div>
+            <?php endif; ?>
+        </div>
         <br class="clear">
 
         <label for="adv_link"><?= $module->l('Minimum order number', 'config_form'); ?></label>
@@ -106,7 +152,7 @@ if (!defined('_PS_VERSION_')) {
         <div class="margin-form">
             <label class="t">
                 <input type="checkbox" name="limit_order_data" value="1" <?= $module->getConfigValue('LIMIT_ORDER_DATA') ? 'checked ' : ''; ?>/>
-                <?= sprintf($module->l('Do not send extended order data to %s', 'config_form'), $module->getDisplayName()); ?>
+                <?= sprintf($module->l('Do not send extended order data to %s (checking this option disables product reviews!)', 'config_form'), $module->getDisplayName()); ?>
             </label>
             <p class="preference_description">
                 <?= sprintf($module->l('By default we send details about the customer and the ordered products to our API, so that we can offer additional features. If you check this box, that will not happen, and not all %s features may be available.', 'config_form'), $module->getDisplayName()); ?>
@@ -141,3 +187,10 @@ if (!defined('_PS_VERSION_')) {
     </table>
 </fieldset>
 <?php endif; ?>
+
+<?php
+function moduleManager() {
+    $moduleManagerBuilder = ModuleManagerBuilder::getInstance();
+    return $moduleManagerBuilder->build();
+}
+?>

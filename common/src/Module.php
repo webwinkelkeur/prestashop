@@ -4,7 +4,6 @@ namespace Valued\PrestaShop;
 use Configuration;
 use Context;
 use Db;
-use Image;
 use Link;
 use Module as PSModule;
 use PrestaShopLogger;
@@ -22,6 +21,7 @@ abstract class Module extends PSModule {
 
     /** @return string */
     abstract protected function getDashboardDomain();
+    const SYNC_URL = 'https://%s/webshops/sync_url';
 
     public function __construct() {
         $this->name = $this->getName();
@@ -81,7 +81,53 @@ abstract class Module extends PSModule {
         Configuration::updateGlobalValue($this->getConfigName('INVITE'), '');
         Configuration::updateGlobalValue($this->getConfigName('JAVASCRIPT'), '1');
 
+        $this->sendSyncUrl();
+
         return true;
+    }
+
+    private function sendSyncUrl(): void {
+        if (!Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
+            return;
+        }
+        $url = sprintf(self::SYNC_URL, $this->getDashboardDomain());
+        $data = [
+            'webshop_id' => Configuration::get($this->getConfigName('SHOP_ID')),
+            'api_key' => Configuration::get($this->getConfigName('API_KEY')),
+            'url' => Context::getContext()->link->getModuleLink($this->getName(), 'sync'),
+        ];
+        try {
+            $this->doSendSyncUrl($url, $data);
+        } catch (Exception $e) {
+            PrestaShopLogger::addLog(sprintf('Sending sync URL to Dashboard failed with error %s', $e->getMessage()));
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function doSendSyncUrl(string $url, array $data): void {
+        $curl = curl_init();
+        $options = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FAILONERROR => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
+            CURLOPT_URL => $url,
+            CURLOPT_TIMEOUT => 10,
+        ];
+        if (!curl_setopt_array($curl, $options)) {
+            throw new Exception('Could not set cURL options');
+        }
+
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
+        }
+
+        curl_close($curl);
     }
 
     private function execSQL($query) {
@@ -337,31 +383,9 @@ abstract class Module extends PSModule {
             if ($with_order_data) {
                 $order_lines = $this->getOrderLines($db, $order['id_order']);
                 $customer_info = $this->getCustomerInfo($db, $order['id_customer']);
-
-                array_walk($order_lines, function (&$line) {
-                    $images = Image::getImages(
-                        Context::getContext()->language->id,
-                        $line['product_id'],
-                        $line['product_attribute_id']
-                    );
-                    if (empty($images)) {
-                        $images = Image::getImages(
-                            Context::getContext()->language->id,
-                            $line['product_id']
-                        );
-                    }
-                    $product = new Product($line['product_id'], false, Context::getContext()->language->id);
-                    foreach ($images as $image) {
-                        $line['product_image'][] = (new Link())->getImageLink(
-                            $product->link_rewrite,
-                            $image['id_image'],
-                            'large_default'
-                        );
-                    }
-                });
                 $post['order_data'] = json_encode([
                     'order' => $order,
-                    'products' => $order_lines,
+                    'products' => $this->getProducts($order_lines),
                     'customer' => $customer_info,
                     'delivery_address' => $delivery_address,
                     'invoice_address' => $invoice_address,
@@ -422,6 +446,29 @@ abstract class Module extends PSModule {
         }
     }
 
+    private function getProducts($order_lines): array {
+        return array_map(function ($line) {
+            $product = new Product($line['product_id'], false, Context::getContext()->language->id);
+            $line['name'] = $line['product_name'];
+            $line['url'] = (new Link())->getProductLink($product);
+            $line['id'] = $line['product_id'];
+            $line['sku'] = $line['product_reference'];
+            $line['image_url'] = $this->getProductImage($product);
+            $line['gtin'] = $line['product_ean13'] ?? $line['product_isbn'];
+            $line['mpn'] = $line['product_mpn'] ?: null;
+            $line['brand'] = $product->getWsManufacturerName();
+
+            return $line;
+        }, $order_lines);
+    }
+
+    private function getProductImage($product): string {
+        $context = Context::getContext();
+        $img = $product->getCover($product->id);
+
+        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($img['link_rewrite'], $img['id_image'], 'large_default'));
+    }
+
     public function hookBackofficeTop() {
         foreach (Shop::getCompleteListOfShopsID() as $shop) {
             $this->sendInvites($shop);
@@ -449,6 +496,10 @@ abstract class Module extends PSModule {
 
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
+            Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) Tools::getValue('sync_prod_reviews'));
+            if (Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
+                $this->sendSyncUrl();
+            }
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),
@@ -541,7 +592,7 @@ abstract class Module extends PSModule {
         return _DB_PREFIX_ . $name;
     }
 
-    private function getConfigName($name) {
+    public function getConfigName($name) {
         return strtoupper($this->getName()) . '_' . $name;
     }
 
