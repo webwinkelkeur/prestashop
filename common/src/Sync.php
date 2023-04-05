@@ -81,7 +81,7 @@ class Sync extends ModuleFrontController {
             $this->ajaxRender(json_encode(['review_id' => $product_review['id']] ?? $product_comment->getId(), JSON_PARTIAL_OUTPUT_ON_ERROR));
     }
 
-    private function getCustomerIdByEmail(string $email): int {
+    private function getCustomerIdByEmail(string $email): ?int {
         $customer = new Customer();
         $customer->getByEmail($email);
 
