@@ -6,35 +6,36 @@ use Configuration;
 use Customer;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use ModuleFrontController;
 use PrestaShop\Module\ProductComment\Entity\ProductComment;
 use PrestaShop\PrestaShop\Adapter\Validate;
 use Product;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class Sync extends ModuleFrontController {
 
     /** @var bool */
     public $ajax;
 
-    /**
-     * @throws Exception
-     */
     public function postProcess(): void {
         $request_data = trim(file_get_contents('php://input'));
         if (!$request_data) {
-            throw new HttpException(400, 'Empty request data');
+            http_response_code(400);
+            echo 'Empty request data.';
+            exit();
         }
         if (!$request_data = json_decode($request_data, true)) {
-            throw new HttpException(400, 'Invalid JSON data provided');
+            http_response_code(400);
+            echo 'Invalid JSON data provided.';
+            exit();
         }
 
         if (
             !$this->hasCredentialFields($request_data['webshop_id'], $request_data['api_key'])
             || $this->credentialsEmpty($request_data['webshop_id'], $request_data['api_key'])
         ) {
-            throw new HttpException(403, 'Missing credential fields');
+            http_response_code(403);
+            echo 'Missing credential fields.';
+            exit();
         }
 
         $this->isAuthorized($request_data['webshop_id'], $request_data['api_key']);
@@ -42,19 +43,20 @@ class Sync extends ModuleFrontController {
         $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
         $product = new Product($request_data['product_review']['product_id'], false, $lang_id);
         if (!Validate::isLoadedObject($product)) {
-            throw new HttpException(404, sprintf('Could not find product with ID (%d)', $request_data['product_review']['product_id']));
+            http_response_code(404);
+            echo sprintf('Could not find product with ID (%d)', $request_data['product_review']['product_id']);
+            exit();
         }
 
         if (!Configuration::get($this->module->getConfigName('SYNC_PROD_REVIEWS'))) {
-            throw new HttpException(403, 'Product review sync is disabled.');
+            http_response_code(403);
+            echo 'Product review sync is disabled.';
+            exit();
         }
 
         $this->syncProductReview($request_data['product_review']);
     }
 
-    /**
-     * @throws Exception
-     */
     private function syncProductReview(array $product_review): void {
         $this->ajax = 1;
         /** @var EntityManagerInterface $entityManager */
@@ -92,16 +94,15 @@ class Sync extends ModuleFrontController {
         \PrestaShopLogger::addLog(sprintf('%s product review with ID (%d)', $deleted ? 'Deleted' : 'Saved', $review_id));
     }
 
-    /**
-     * @throws Exception
-     */
     private function isAuthorized(string $webshop_id, string $api_key): void {
         $curr_webshop_id = Configuration::get($this->module->getConfigName('SHOP_ID'));
         $curr_api_key = Configuration::get($this->module->getConfigName('API_KEY'));
         if ($webshop_id == $curr_webshop_id && hash_equals($api_key, $curr_api_key)) {
             return;
         }
-        throw new HttpException(401, 'Wrong credentials');
+        http_response_code(401);
+        echo 'Wrong credentials.';
+        exit();
     }
 
     private function hasCredentialFields(?string $webshop_id, ?string $api_key): bool {

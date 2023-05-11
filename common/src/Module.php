@@ -4,6 +4,7 @@ namespace Valued\PrestaShop;
 use Configuration;
 use Context;
 use Db;
+use Exception;
 use Link;
 use Module as PSModule;
 use PrestaShopLogger;
@@ -466,7 +467,7 @@ abstract class Module extends PSModule {
         $context = Context::getContext();
         $img = $product->getCover($product->id);
 
-        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($img['link_rewrite'], $img['id_image'], 'large_default'));
+        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($product->link_rewrite, $img['id_image'], 'home_default'));
     }
 
     public function hookBackofficeTop() {
