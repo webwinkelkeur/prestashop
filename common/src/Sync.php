@@ -19,23 +19,17 @@ class Sync extends ModuleFrontController {
     public function postProcess(): void {
         $request_data = trim(file_get_contents('php://input'));
         if (!$request_data) {
-            http_response_code(400);
-            echo 'Empty request data.';
-            exit();
+            $this->returnResponseCode(400, 'Empty request data.');
         }
         if (!$request_data = json_decode($request_data, true)) {
-            http_response_code(400);
-            echo 'Invalid JSON data provided.';
-            exit();
+            $this->returnResponseCode(400, 'Invalid JSON data provided.');
         }
 
         if (
             !$this->hasCredentialFields($request_data['webshop_id'], $request_data['api_key'])
             || $this->credentialsEmpty($request_data['webshop_id'], $request_data['api_key'])
         ) {
-            http_response_code(403);
-            echo 'Missing credential fields.';
-            exit();
+            $this->returnResponseCode(403, 'Missing credential fields.');
         }
 
         $this->isAuthorized($request_data['webshop_id'], $request_data['api_key']);
@@ -43,15 +37,11 @@ class Sync extends ModuleFrontController {
         $lang_id = (int) Configuration::get('PS_LANG_DEFAULT');
         $product = new Product($request_data['product_review']['product_id'], false, $lang_id);
         if (!Validate::isLoadedObject($product)) {
-            http_response_code(404);
-            echo sprintf('Could not find product with ID (%d)', $request_data['product_review']['product_id']);
-            exit();
+            $this->returnResponseCode(404, sprintf('Could not find product with ID (%d)', $request_data['product_review']['product_id']));
         }
 
         if (!Configuration::get($this->module->getConfigName('SYNC_PROD_REVIEWS'))) {
-            http_response_code(403);
-            echo 'Product review sync is disabled.';
-            exit();
+            $this->returnResponseCode(403, 'Product review sync is disabled.');
         }
 
         $this->syncProductReview($request_data['product_review']);
@@ -100,9 +90,7 @@ class Sync extends ModuleFrontController {
         if ($webshop_id == $curr_webshop_id && hash_equals($api_key, $curr_api_key)) {
             return;
         }
-        http_response_code(401);
-        echo 'Wrong credentials.';
-        exit();
+        $this->returnResponseCode(401, 'Wrong credentials.');
     }
 
     private function hasCredentialFields(?string $webshop_id, ?string $api_key): bool {
@@ -111,5 +99,10 @@ class Sync extends ModuleFrontController {
 
     private function credentialsEmpty(?string $webshop_id, ?string $api_key): bool {
         return !trim($webshop_id) || !trim($api_key);
+    }
+
+    private function returnResponseCode(int $code, string $message): void {
+        http_response_code($code);
+        die($message);
     }
 }
