@@ -98,13 +98,13 @@ abstract class Module extends PSModule {
         ];
         try {
             $this->doSendSyncUrl($url, $data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             PrestaShopLogger::addLog(sprintf('Sending sync URL to Dashboard failed with error %s', $e->getMessage()));
         }
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     private function doSendSyncUrl(string $url, array $data): void {
         $curl = curl_init();
@@ -119,12 +119,12 @@ abstract class Module extends PSModule {
             CURLOPT_TIMEOUT => 10,
         ];
         if (!curl_setopt_array($curl, $options)) {
-            throw new Exception('Could not set cURL options');
+            throw new \Exception('Could not set cURL options');
         }
 
         $response = curl_exec($curl);
         if ($response === false) {
-            throw new Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
+            throw new \Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
         }
 
         curl_close($curl);
@@ -466,7 +466,7 @@ abstract class Module extends PSModule {
         $context = Context::getContext();
         $img = $product->getCover($product->id);
 
-        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($img['link_rewrite'], $img['id_image'], 'large_default'));
+        return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($product->link_rewrite, $img['id_image'], 'home_default'));
     }
 
     public function hookBackofficeTop() {
