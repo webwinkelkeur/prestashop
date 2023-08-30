@@ -6,6 +6,9 @@ use Context;
 use Db;
 use Link;
 use Module as PSModule;
+use PrestaShop\PrestaShop\Adapter\Entity\Address;
+use PrestaShop\PrestaShop\Adapter\Entity\Customer;
+use PrestaShop\PrestaShop\Adapter\Validate;
 use PrestaShopLogger;
 use Product;
 use RuntimeException;
@@ -22,6 +25,7 @@ abstract class Module extends PSModule {
     /** @return string */
     abstract protected function getDashboardDomain();
     const SYNC_URL = 'https://%s/webshops/sync_url';
+    private const ALGORITHM = 'sha512';
 
     public function __construct() {
         $this->name = $this->getName();
@@ -35,6 +39,9 @@ abstract class Module extends PSModule {
 
         $this->displayName = $this->getDisplayName();
         $this->description = $this->getDescription();
+        if (!$this->isRegisteredInHook('displayOrderConfirmation')) {
+            $this->registerHook('displayOrderConfirmation');
+        }
     }
 
     protected function getName() {
@@ -188,6 +195,48 @@ abstract class Module extends PSModule {
         if ($html) {
             return $html;
         }
+    }
+
+    public function hookDisplayOrderConfirmation($params) {
+        if (Configuration::get($this->getConfigName('INVITE')) != 3 || !$params) {
+            return;
+        }
+        $order_object = $params['order'];
+        $order_data = [];
+        if (Validate::isLoadedObject($order_object)) {
+            $delivery_details = new Address((int) ($order_object->id_address_delivery));
+            $customer = new Customer((int) ($delivery_details->id_customer));
+            $order_data = [
+                'webshopId' => Configuration::get($this->getConfigName('SHOP_ID')),
+                'orderNumber' => $order_object->reference,
+                'email' => $customer->email,
+                'firstName' => $customer->firstname,
+                'inviteDelay' => Configuration::get($this->getConfigName('INVITE_DELAY'))
+            ];
+
+            try {
+                $order_data['signature'] = $this->getHashForDash($order_data);
+            } catch (InvalidKeysException $e) {
+                PrestaShopLogger::addLog(sprintf($this->l('Could not add data for order: %s to the order success page. Data for that order will not be sent to the %s dashboard. Reason: the shop ID or API key are missing.', $order_object->reference, $this->getDisplayName())), 3);
+                return;
+            }
+        }
+
+        echo sprintf(
+            '<script type="application/json" id ="%s_order_completed">%s</script>',
+            htmlentities(strtolower($this->getName())),
+            json_encode($order_data, JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS)
+        );
+    }
+
+    public function getHashForDash(array $data): string {
+        if (
+            !Configuration::get($this->getConfigName('SHOP_ID'))
+            || !Configuration::get($this->getConfigName('API_KEY'))
+        ){
+            throw new InvalidKeysException(sprintf('Could not add order data for %s dashboard to the checkout success page because the shop ID or API key are missing', $this->getDisplayName()));
+        }
+        return hash_hmac(self::ALGORITHM, http_build_query($data), Configuration::get($this->getConfigName('SHOP_ID')) . ":". Configuration::get($this->getConfigName('API_KEY')));
     }
 
     private function getRichSnippet($shop_id) {
