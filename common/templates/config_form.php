@@ -1,6 +1,5 @@
 <?php
 
-use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManager;
 use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
 
 if (!defined('_PS_VERSION_')) {
@@ -75,7 +74,7 @@ if (!defined('_PS_VERSION_')) {
             <label class="t" for="webwinkelkeur-invite-on">
                 <img src="../img/admin/enabled.gif" alt="">
             </label>
-            <input type="radio" name="invite" id="webwinkelkeur-invite-on" value="1" <?= $module->getConfigValue('INVITE') == 1 ? 'checked' : ''; ?>>
+            <input type="radio" name="invite" id="webwinkelkeur-invite-on" value="1" <?= !$module->getConfigValue('INVITE') || $module->getConfigValue('INVITE') == 1 ? 'checked' : ''; ?>>
             <label class="t" for="webwinkelkeur-invite-on"><?= $module->l('Yes, for every order', 'config_form'); ?></label><br>
 
             <label class="t" for="webwinkelkeur-invite-first">
@@ -84,10 +83,17 @@ if (!defined('_PS_VERSION_')) {
             <input type="radio" name="invite" id="webwinkelkeur-invite-first" value="2" <?= $module->getConfigValue('INVITE') == 2 ? 'checked' : ''; ?>>
             <label class="t" for="webwinkelkeur-invite-first"><?= $module->l("Yes, only for a customer's first order", 'config_form'); ?></label><br>
 
+            <label class="t" for="webwinkelkeur-invite-popup">
+              <img src="../img/admin/enabled.gif" alt="">
+            </label>
+            <input type="radio" name="invite" id="webwinkelkeur-invite-popup" value="3" <?= $module->getConfigValue('INVITE') == 3 ? 'checked' : ''; ?>>
+            <label class="t" for="webwinkelkeur-invite-popup"><?= $module->l("Yes, pop-up after purchase at 'thank you' page. Privacy first review option: order data will only be shared after permission from the customer.", 'config_form'); ?></label>
+          <br>
+
             <label class="t" for="webwinkelkeur-invite-off">
                 <img src="../img/admin/disabled.gif" alt="">
             </label>
-            <input type="radio" name="invite" id="webwinkelkeur-invite-off" value="" <?= !$module->getConfigValue('INVITE') ? 'checked' : ''; ?>>
+            <input type="radio" name="invite" id="webwinkelkeur-invite-off" value="4" <?= $module->getConfigValue('INVITE') == 4 ? 'checked' : ''; ?>>
             <label class="t" for="webwinkelkeur-invite-off"><?= $module->l('No', 'config_form'); ?></label>
         </div>
 
