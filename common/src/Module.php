@@ -189,7 +189,7 @@ abstract class Module extends PSModule {
             'system_key' => $this->getSystemKey(),
             'consent_data' => json_encode([
                 'webshopId' => $webshop_id,
-                'orderNumber' => $order->id_order,
+                'orderNumber' => $order->id,
                 'email' => $customer->email,
                 'firstName' => $customer->firstname,
                 'inviteDelay' => Configuration::get($this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
