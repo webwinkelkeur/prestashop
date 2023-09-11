@@ -14,4 +14,8 @@ class WebwinkelKeur extends Valued\PrestaShop\Module {
     protected function getDashboardDomain() {
         return 'dashboard.webwinkelkeur.nl';
     }
+
+    protected function getSystemKey() {
+        return 'webwinkelkeur';
+    }
 }

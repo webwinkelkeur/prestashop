@@ -21,6 +21,10 @@ abstract class Module extends PSModule {
 
     /** @return string */
     abstract protected function getDashboardDomain();
+
+    /** @return string */
+    abstract protected function getSystemKey();
+
     const SYNC_URL = 'https://%s/webshops/sync_url';
 
     public function __construct() {
@@ -182,7 +186,7 @@ abstract class Module extends PSModule {
         $ps_shop_id = $order->id_shop;
         $webshop_id = Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id);
         return $this->render('consent_data', [
-            'system_name' => $this->getModuleKey(),
+            'system_key' => $this->getSystemKey(),
             'consent_data' => json_encode([
                 'webshopId' => $webshop_id,
                 'orderNumber' => $order->id_order,
