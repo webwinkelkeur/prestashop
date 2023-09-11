@@ -185,14 +185,16 @@ abstract class Module extends PSModule {
         $customer = new \Customer((int) ($order->id_customer));
         $ps_shop_id = $order->id_shop;
         $webshop_id = Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id);
+
         return $this->render('consent_data', [
             'system_key' => $this->getSystemKey(),
+            'consent_flow_enabled' => Configuration::get((int) $this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3,
             'consent_data' => json_encode([
                 'webshopId' => $webshop_id,
                 'orderNumber' => $order->id,
                 'email' => $customer->email,
                 'firstName' => $customer->firstname,
-                'inviteDelay' => Configuration::get($this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
+                'inviteDelay' => Configuration::get((int) $this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
             ]),
         ]);
     }
