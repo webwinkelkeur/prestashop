@@ -156,7 +156,7 @@ abstract class Module extends PSModule {
         return parent::uninstall();
     }
 
-    public function hookHeader($params) {
+    public function hookDisplayHeader($params) {
         if (!Configuration::get($this->getConfigName('JAVASCRIPT'))) {
             return "<!-- {$this->getDisplayName()}: JS disabled -->\n";
         }
@@ -175,7 +175,25 @@ abstract class Module extends PSModule {
         ]);
     }
 
-    public function hookFooter($params) {
+
+    public function hookOrderConfirmation($params) {
+        $order = $params['order'];
+        $customer = new \Customer((int) ($order->id_customer));
+        $ps_shop_id = $order->id_shop;
+        $webshop_id = Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id);
+        return $this->render('consent_data', [
+            'system_name' => $this->getModuleKey(),
+            'consent_data' => json_encode([
+                'webshopId' => $webshop_id,
+                'orderNumber' => $order->id_order,
+                'email' => $customer->email,
+                'firstName' => $customer->firstname,
+                'inviteDelay' => Configuration::get($this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
+            ]),
+        ]);
+    }
+
+    public function hookDisplayFooter($params) {
         if (!Configuration::get($this->getConfigName('RICH_SNIPPET'))
            || !($shop_id = Configuration::get($this->getConfigName('SHOP_ID')))
            || !ctype_digit($shop_id)
@@ -469,7 +487,7 @@ abstract class Module extends PSModule {
         return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($product->link_rewrite, $img['id_image'], 'home_default'));
     }
 
-    public function hookBackofficeTop() {
+    public function hookDisplayBackOfficeTop() {
         foreach (Shop::getCompleteListOfShopsID() as $shop) {
             $this->sendInvites($shop);
         }
@@ -533,9 +551,10 @@ abstract class Module extends PSModule {
                 !!Tools::getValue('limit_order_data')
             );
 
-            $this->registerHook('header');
-            $this->registerHook('footer');
-            $this->registerHook('backOfficeTop');
+            $this->registerHook('displayHeader');
+            $this->registerHook('displayFooter');
+            $this->registerHook('orderConfirmation');
+            $this->registerHook('displayBackOfficeTop');
 
             if (sizeof($errors) == 0) {
                 $success = true;
