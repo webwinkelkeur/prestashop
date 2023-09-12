@@ -29,6 +29,8 @@ abstract class Module extends PSModule {
 
     const SYNC_URL = 'https://%s/webshops/sync_url';
 
+    const CONSENT_URL = 'https://%s/api/2.0/order_permissions.json?id=%s&code=%s&orderNumber=%s';
+
     public function __construct() {
         $this->name = $this->getName();
         $this->tab = 'pricing_promotion';
@@ -358,6 +360,16 @@ abstract class Module extends PSModule {
         }
 
         foreach ($orders as $order) {
+            if (
+                Configuration::get($this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3
+                && !$this->hasConsent($order['id_order'], $ps_shop_id)
+            ) {
+                PrestaShopLogger::addLog(
+                    sprintf('Invitation was not created for order (%s) as customer did not give a consent', $order['id_order']),
+                );
+                return;
+            }
+
             $invoice_address = $this->getOrderAddress($db, $order['id_address_invoice'])[0];
             $delivery_address = $this->getOrderAddress($db, $order['id_address_delivery'])[0];
             $phones = array_unique(array_filter([
@@ -666,5 +678,29 @@ abstract class Module extends PSModule {
         }
 
         return $this->curl;
+    }
+
+    private function hasConsent(string $order_number, int $ps_shop_id): bool {
+        $url = sprintf(
+            self::CONSENT_URL,
+            $this->getDashboardDomain(),
+            Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
+            Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
+            $order_number,
+        );
+
+        try {
+            $response_data = json_decode($this->request($url, 'GET'), true);
+        } catch (\Exception $e) {
+            $message = sprintf(
+                'Checking consent for order %s failed: %s',
+                $order_number,
+                $e->getMessage(),
+            );
+            PrestaShopLogger::addLog($message);
+            return false;
+        }
+
+        return $response_data['has_consent'] ?? false;
     }
 }
