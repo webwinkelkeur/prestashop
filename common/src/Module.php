@@ -431,6 +431,7 @@ abstract class Module extends PSModule {
 
                     $response = $this->request($url, 'POST', [
                         CURLOPT_POSTFIELDS => $post,
+                        CURLOPT_TIMEOUT => 10,
                     ]);
 
                     $data = json_decode($response, true);
