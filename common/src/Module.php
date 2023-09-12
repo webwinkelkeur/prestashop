@@ -102,38 +102,16 @@ abstract class Module extends PSModule {
             'api_key' => Configuration::get($this->getConfigName('API_KEY')),
             'url' => Context::getContext()->link->getModuleLink($this->getName(), 'sync'),
         ];
+        $options = [
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
+            CURLOPT_TIMEOUT => 10,
+        ];
         try {
-            $this->doSendSyncUrl($url, $data);
+            $this->request($url, 'POST', $options);
         } catch (\Exception $e) {
             PrestaShopLogger::addLog(sprintf('Sending sync URL to Dashboard failed with error %s', $e->getMessage()));
         }
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function doSendSyncUrl(string $url, array $data): void {
-        $curl = curl_init();
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FAILONERROR => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
-            CURLOPT_URL => $url,
-            CURLOPT_TIMEOUT => 10,
-        ];
-        if (!curl_setopt_array($curl, $options)) {
-            throw new \Exception('Could not set cURL options');
-        }
-
-        $response = curl_exec($curl);
-        if ($response === false) {
-            throw new \Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
-        }
-
-        curl_close($curl);
     }
 
     private function execSQL($query) {
@@ -523,9 +501,7 @@ abstract class Module extends PSModule {
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
             Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) Tools::getValue('sync_prod_reviews'));
-            if (Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
-                $this->sendSyncUrl();
-            }
+            $this->sendSyncUrl();
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),
@@ -641,16 +617,19 @@ abstract class Module extends PSModule {
 
     /**
      * @param string $url
+     * @param string $method
      * @param array $options
      * @return string
      */
-    private function request($url, $options = []) {
+    private function request(string $url, string $method, array $options = []) {
         $options += [
+            CURLOPT_URL => $url,
             CURLOPT_FAILONERROR => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CUSTOMREQUEST => $method,
         ];
-        $ch = $this->getCurl($url, $options);
+        $ch = $this->getCurl($options);
         if (!$ch) {
             throw new RuntimeException('curl_init failed');
         }
@@ -675,7 +654,7 @@ abstract class Module extends PSModule {
         })();
     }
 
-    private function getCurl(string $url, array $options) {
+    private function getCurl(array $options) {
         if (!$this->curl) {
             $this->curl = curl_init();
         } else {
