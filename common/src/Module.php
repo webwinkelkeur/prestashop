@@ -168,13 +168,13 @@ abstract class Module extends PSModule {
 
         return $this->render('consent_data', [
             'system_key' => $this->getSystemKey(),
-            'consent_flow_enabled' => Configuration::get((int) $this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3,
+            'consent_flow_enabled' => (int) Configuration::get($this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3,
             'consent_data' => json_encode([
                 'webshopId' => $webshop_id,
                 'orderNumber' => $order->id,
                 'email' => $customer->email,
                 'firstName' => $customer->firstname,
-                'inviteDelay' => Configuration::get((int) $this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
+                'inviteDelay' => (int) Configuration::get($this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
             ]),
         ]);
     }

@@ -82,7 +82,7 @@ if (!defined('_PS_VERSION_')) {
                 <img src="../img/admin/enabled.gif" alt="">
             </label>
             <input type="radio" name="invite" id="webwinkelkeur-consent-flow" value="3" <?= $module->getConfigValue('INVITE') == 3 ? 'checked' : ''; ?>>
-            <label class="t" for="webwinkelkeur-consent-flow"><?= $module->l('Yes, pop-up after purchase at "thank you" page. Privacy first review option: order data will only be shared after permission from the customer.', 'config_form'); ?></label><br>
+            <label class="t" for="webwinkelkeur-consent-flow"><?= $module->l('Yes, pop-up after purchase at "thank you" page.', 'config_form'); ?></label><br>
 
             <label class="t" for="webwinkelkeur-invite-first">
                 <img src="../img/admin/enabled.gif" alt="">
