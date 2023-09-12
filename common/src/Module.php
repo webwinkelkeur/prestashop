@@ -160,7 +160,7 @@ abstract class Module extends PSModule {
     }
 
 
-    public function hookOrderConfirmation($params) {
+    public function hookDisplayOrderConfirmation($params) {
         $order = $params['order'];
         $customer = new \Customer((int) ($order->id_customer));
         $ps_shop_id = $order->id_shop;
@@ -537,7 +537,7 @@ abstract class Module extends PSModule {
 
             $this->registerHook('displayHeader');
             $this->registerHook('displayFooter');
-            $this->registerHook('orderConfirmation');
+            $this->registerHook('displayOrderConfirmation');
             $this->registerHook('displayBackOfficeTop');
 
             if (sizeof($errors) == 0) {
