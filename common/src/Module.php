@@ -685,7 +685,7 @@ abstract class Module extends PSModule {
             self::CONSENT_URL,
             $this->getDashboardDomain(),
             Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
-            Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
+            Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
             $order_number,
         );
 
