@@ -373,12 +373,6 @@ abstract class Module extends PSModule {
 
             $invoice_address = $this->getOrderAddress($db, $order['id_address_invoice'])[0];
             $delivery_address = $this->getOrderAddress($db, $order['id_address_delivery'])[0];
-            $phones = array_unique(array_filter([
-                $invoice_address['phone'],
-                $invoice_address['phone_mobile'],
-                $delivery_address['phone'],
-                $delivery_address['phone_mobile'],
-            ]));
 
             $post = [
                 'email'     => $order['email'],
@@ -386,7 +380,6 @@ abstract class Module extends PSModule {
                 'delay'     => $invite_delay,
                 'language'      => str_replace('-', '_', $order['language_code']),
                 'customer_name' => $order['firstname'] . ' ' . $order['lastname'],
-                'phone_numbers' => $phones,
                 'order_total' => $order['total_paid'],
                 'client'    => 'prestashop',
                 'platform_version' => _PS_VERSION_,
