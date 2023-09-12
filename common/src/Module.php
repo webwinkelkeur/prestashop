@@ -221,7 +221,7 @@ abstract class Module extends PSModule {
             $data = json_decode($json, true);
         } else {
             try {
-                $json = $this->request($url, [
+                $json = $this->request($url, 'GET', [
                     CURLOPT_CONNECTTIMEOUT => 2,
                     CURLOPT_TIMEOUT => 4,
                 ]);
@@ -364,6 +364,7 @@ abstract class Module extends PSModule {
                 Configuration::get($this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3
                 && !$this->hasConsent($order['id_order'], $ps_shop_id)
             ) {
+                $this->markInviteAsSent($order['id_order']);
                 PrestaShopLogger::addLog(
                     sprintf('Invitation was not created for order (%s) as customer did not give a consent', $order['id_order']),
                 );
@@ -428,7 +429,7 @@ abstract class Module extends PSModule {
                             'code' => $api_key,
                         ]);
 
-                    $response = $this->request($url, [
+                    $response = $this->request($url, 'POST', [
                         CURLOPT_POSTFIELDS => $post,
                     ]);
 
@@ -443,6 +444,8 @@ abstract class Module extends PSModule {
                     }
 
                     $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . (int) $order['id_order']);
+
+                    $this->markInviteAsSent($order['id_order']);
 
                     PrestaShopLogger::addLog(sprintf(
                         '%s: Requested invitation for order %s',
@@ -680,13 +683,13 @@ abstract class Module extends PSModule {
         return $this->curl;
     }
 
-    private function hasConsent(string $order_number, int $ps_shop_id): bool {
+    private function hasConsent(int $order_id, int $ps_shop_id): bool {
         $url = sprintf(
             self::CONSENT_URL,
             $this->getDashboardDomain(),
             Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
             Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
-            $order_number,
+            $order_id,
         );
 
         try {
@@ -694,7 +697,7 @@ abstract class Module extends PSModule {
         } catch (\Exception $e) {
             $message = sprintf(
                 'Checking consent for order %s failed: %s',
-                $order_number,
+                $order_id,
                 $e->getMessage(),
             );
             PrestaShopLogger::addLog($message);
@@ -702,5 +705,10 @@ abstract class Module extends PSModule {
         }
 
         return $response_data['has_consent'] ?? false;
+    }
+
+    private function markInviteAsSent(int $order_id): void {
+        $db = Db::getInstance();
+        $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . $order_id);
     }
 }
