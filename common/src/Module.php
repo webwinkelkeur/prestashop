@@ -25,6 +25,8 @@ abstract class Module extends PSModule {
     /** @return string */
     abstract protected function getSystemKey();
 
+    private $curl;
+
     const SYNC_URL = 'https://%s/webshops/sync_url';
 
     public function __construct() {
@@ -643,24 +645,22 @@ abstract class Module extends PSModule {
      * @return string
      */
     private function request($url, $options = []) {
-        $ch = curl_init($url);
-        if (!$ch) {
-            throw new RuntimeException('curl_init failed');
-        }
         $options += [
             CURLOPT_FAILONERROR => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
         ];
-        if (!curl_setopt_array($ch, $options)) {
-            throw new RuntimeException('curl_setopt_array failed');
+        $ch = $this->getCurl($url, $options);
+        if (!$ch) {
+            throw new RuntimeException('curl_init failed');
         }
+
         $response = curl_exec($ch);
         if ($response === false) {
             throw new RuntimeException(sprintf(
                 'curl: (%s) %s',
                 curl_errno($ch),
-                curl_error($ch)
+                curl_error($ch),
             ));
         }
         return $response;
@@ -673,5 +673,19 @@ abstract class Module extends PSModule {
             require __DIR__ . '/../templates/' . $__template . '.php';
             return ob_get_clean();
         })();
+    }
+
+    private function getCurl(string $url, array $options) {
+        if (!$this->curl) {
+            $this->curl = curl_init();
+        } else {
+            curl_reset($this->curl);
+        }
+
+        if (!curl_setopt_array($this->curl, $options)) {
+            throw new RuntimeException('curl_setopt_array failed');
+        }
+
+        return $this->curl;
     }
 }
