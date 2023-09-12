@@ -444,8 +444,6 @@ abstract class Module extends PSModule {
                         throw new RuntimeException($data['message']);
                     }
 
-                    $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . (int) $order['id_order']);
-
                     $this->markInviteAsSent($order['id_order']);
 
                     PrestaShopLogger::addLog(sprintf(
@@ -638,14 +636,14 @@ abstract class Module extends PSModule {
      * @return string
      */
     private function request(string $url, string $method, array $options = []) {
-        $options += [
+        $default_options = [
             CURLOPT_URL => $url,
             CURLOPT_FAILONERROR => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_CUSTOMREQUEST => $method,
         ];
-        $ch = $this->getCurl($options);
+        $ch = $this->getCurl($default_options + $options);
         if (!$ch) {
             throw new RuntimeException('curl_init failed');
         }
