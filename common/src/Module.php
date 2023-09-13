@@ -29,7 +29,7 @@ abstract class Module extends PSModule {
 
     const SYNC_URL = 'https://%s/webshops/sync_url';
 
-    const CONSENT_URL = 'https://%s/api/2.0/order_permissions.json?id=%s&code=%s&orderNumber=%s';
+    const CONSENT_URL = 'https://%s/api/2.0/order_permissions.json?%s';
 
     public function __construct() {
         $this->name = $this->getName();
@@ -679,9 +679,11 @@ abstract class Module extends PSModule {
         $url = sprintf(
             self::CONSENT_URL,
             $this->getDashboardDomain(),
-            Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
-            Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
-            $order_id,
+            http_build_query([
+                'id' => Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
+                'code' => Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
+                'orderNumber' => $order_id,
+            ]),
         );
 
         try {
