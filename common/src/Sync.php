@@ -56,13 +56,12 @@ class Sync extends ModuleFrontController {
         if ($product_review['id']) {
             $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
             $product_comment = $product_comment_repository->find($product_review['id']);
+            if (!$product_comment) {
+                $this->returnResponseCode(404, sprintf('Could not find product review with ID (%d)', $product_review['id']));
+                return;
+            }
         } else {
             $product_comment = new ProductComment();
-        }
-
-        if (!$product_comment) {
-            $this->returnResponseCode(404, sprintf('Could not find product review with ID (%d)', $product_review['id']));
-            return;
         }
 
         $product_comment->setProductId($product_review['product_id'])
