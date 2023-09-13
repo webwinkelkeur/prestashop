@@ -70,7 +70,7 @@ class Sync extends ModuleFrontController {
             }
             $entity_manager->flush();
             $this->logReviewSync($product_review['id'] ?? $product_comment->getId(), $product_review['deleted']);
-            $this->ajaxRender(json_encode(['review_id' => $product_review['id']] ?? $product_comment->getId(), JSON_PARTIAL_OUTPUT_ON_ERROR));
+            $this->ajaxRender(json_encode(['review_id' => $product_comment->getId()]));
     }
 
     private function getCustomerIdByEmail(string $email): ?int {
