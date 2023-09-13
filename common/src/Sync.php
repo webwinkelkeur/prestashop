@@ -58,7 +58,6 @@ class Sync extends ModuleFrontController {
             $product_comment = $product_comment_repository->find($product_review['id']);
             if (!$product_comment) {
                 $this->returnResponseCode(404, sprintf('Could not find product review with ID (%d)', $product_review['id']));
-                return;
             }
         } else {
             $product_comment = new ProductComment();
