@@ -60,6 +60,11 @@ class Sync extends ModuleFrontController {
             $product_comment = new ProductComment();
         }
 
+        if (!$product_comment) {
+            $this->returnResponseCode(404, sprintf('Could not find product review with ID (%d)', $product_review['id']));
+            return;
+        }
+
         $product_comment->setProductId($product_review['product_id'])
             ->setCustomerId($this->getCustomerIdByEmail($product_review['reviewer']['email']) ?? 0)
             ->setGuestId(0)
