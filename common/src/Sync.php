@@ -53,8 +53,13 @@ class Sync extends ModuleFrontController {
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
         $date_add = DateTime::createFromFormat('Y-m-d H:i:s', $product_review['created']);
 
-        $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
-        $product_comment = $product_review['id'] ? $product_comment_repository->find($product_review['id']) : new ProductComment();
+        if ($product_review['id']) {
+            $product_comment_repository = $entity_manager->getRepository(ProductComment::class);
+            $product_comment = $product_comment_repository->find($product_review['id']);
+        } else {
+            $product_comment = new ProductComment();
+        }
+
         $product_comment->setProductId($product_review['product_id'])
             ->setCustomerId($this->getCustomerIdByEmail($product_review['reviewer']['email']) ?? 0)
             ->setGuestId(0)
@@ -63,7 +68,8 @@ class Sync extends ModuleFrontController {
             ->setCustomerName($product_review['reviewer']['name'])
             ->setGrade($product_review['rating'])
             ->setValidate(1)
-            ->setDateAdd($date_add);
+            ->setDateAdd($date_add)
+            ->setDeleted($product_review['deleted']);
 
             if (!$product_review['id']) {
                 $entity_manager->persist($product_comment);
