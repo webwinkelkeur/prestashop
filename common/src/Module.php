@@ -423,7 +423,7 @@ abstract class Module extends PSModule {
                         ]);
 
                     $response = $this->request($url, 'POST', [
-                        CURLOPT_POSTFIELDS => $post,
+                        CURLOPT_POSTFIELDS => http_build_query($post),
                         CURLOPT_TIMEOUT => 10,
                     ]);
 
