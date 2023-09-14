@@ -628,7 +628,7 @@ abstract class Module extends PSModule {
      * @param array $options
      * @return string
      */
-    private function request(string $url, string $method, array $options = []) {
+    private function request(string $url, string $method, array $options = []): string {
         $default_options = [
             CURLOPT_URL => $url,
             CURLOPT_FAILONERROR => true,
