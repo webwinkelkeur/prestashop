@@ -631,9 +631,6 @@ abstract class Module extends PSModule {
             CURLOPT_CUSTOMREQUEST => $method,
         ];
         $ch = $this->getCurl($default_options + $options);
-        if (!$ch) {
-            throw new RuntimeException('curl_init failed');
-        }
 
         $response = curl_exec($ch);
         if ($response === false) {
@@ -664,6 +661,10 @@ abstract class Module extends PSModule {
 
         if (!curl_setopt_array($this->curl, $options)) {
             throw new RuntimeException('curl_setopt_array failed');
+        }
+
+        if (!$this->curl) {
+            throw new RuntimeException('curl_init failed');
         }
 
         return $this->curl;
