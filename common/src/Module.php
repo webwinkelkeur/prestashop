@@ -21,7 +21,15 @@ abstract class Module extends PSModule {
 
     /** @return string */
     abstract protected function getDashboardDomain();
+
+    /** @return string */
+    abstract protected function getSystemKey();
+
+    private $curl;
+
     const SYNC_URL = 'https://%s/webshops/sync_url';
+
+    const CONSENT_URL = 'https://%s/api/2.0/order_permissions.json?%s';
 
     public function __construct() {
         $this->name = $this->getName();
@@ -96,38 +104,16 @@ abstract class Module extends PSModule {
             'api_key' => Configuration::get($this->getConfigName('API_KEY')),
             'url' => Context::getContext()->link->getModuleLink($this->getName(), 'sync'),
         ];
+        $options = [
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
+            CURLOPT_TIMEOUT => 10,
+        ];
         try {
-            $this->doSendSyncUrl($url, $data);
+            $this->request($url, 'POST', $options);
         } catch (\Exception $e) {
             PrestaShopLogger::addLog(sprintf('Sending sync URL to Dashboard failed with error %s', $e->getMessage()));
         }
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function doSendSyncUrl(string $url, array $data): void {
-        $curl = curl_init();
-        $options = [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FAILONERROR => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => ['Content-Type:application/json'],
-            CURLOPT_URL => $url,
-            CURLOPT_TIMEOUT => 10,
-        ];
-        if (!curl_setopt_array($curl, $options)) {
-            throw new \Exception('Could not set cURL options');
-        }
-
-        $response = curl_exec($curl);
-        if ($response === false) {
-            throw new \Exception(sprintf('(%s) %s', curl_errno($curl), curl_error($curl)));
-        }
-
-        curl_close($curl);
     }
 
     private function execSQL($query) {
@@ -156,7 +142,7 @@ abstract class Module extends PSModule {
         return parent::uninstall();
     }
 
-    public function hookHeader($params) {
+    public function hookDisplayHeader($params) {
         if (!Configuration::get($this->getConfigName('JAVASCRIPT'))) {
             return "<!-- {$this->getDisplayName()}: JS disabled -->\n";
         }
@@ -175,7 +161,27 @@ abstract class Module extends PSModule {
         ]);
     }
 
-    public function hookFooter($params) {
+
+    public function hookDisplayOrderConfirmation($params) {
+        $order = $params['order'];
+        $customer = new \Customer((int) $order->id_customer);
+        $ps_shop_id = $order->id_shop;
+        $webshop_id = Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id);
+
+        return $this->render('consent_data', [
+            'system_key' => $this->getSystemKey(),
+            'consent_flow_enabled' => (int) Configuration::get($this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3,
+            'consent_data' => json_encode([
+                'webshopId' => $webshop_id,
+                'orderNumber' => $order->id,
+                'email' => $customer->email,
+                'firstName' => $customer->firstname,
+                'inviteDelay' => (int) Configuration::get($this->getConfigName('INVITE_DELAY'), null, null, $ps_shop_id),
+            ]),
+        ]);
+    }
+
+    public function hookDisplayFooter($params) {
         if (!Configuration::get($this->getConfigName('RICH_SNIPPET'))
            || !($shop_id = Configuration::get($this->getConfigName('SHOP_ID')))
            || !ctype_digit($shop_id)
@@ -215,7 +221,7 @@ abstract class Module extends PSModule {
             $data = json_decode($json, true);
         } else {
             try {
-                $json = $this->request($url, [
+                $json = $this->request($url, 'GET', [
                     CURLOPT_CONNECTTIMEOUT => 2,
                     CURLOPT_TIMEOUT => 4,
                 ]);
@@ -354,14 +360,19 @@ abstract class Module extends PSModule {
         }
 
         foreach ($orders as $order) {
+            if (
+                Configuration::get($this->getConfigName('INVITE'), null, null, $ps_shop_id) == 3
+                && !$this->hasConsent($order['id_order'], $ps_shop_id)
+            ) {
+                $this->markInviteAsSent($order['id_order']);
+                PrestaShopLogger::addLog(
+                    sprintf('Invitation was not created for order (%s) as customer did not consent', $order['id_order']),
+                );
+                return;
+            }
+
             $invoice_address = $this->getOrderAddress($db, $order['id_address_invoice'])[0];
             $delivery_address = $this->getOrderAddress($db, $order['id_address_delivery'])[0];
-            $phones = array_unique(array_filter([
-                $invoice_address['phone'],
-                $invoice_address['phone_mobile'],
-                $delivery_address['phone'],
-                $delivery_address['phone_mobile'],
-            ]));
 
             $post = [
                 'email'     => $order['email'],
@@ -369,7 +380,6 @@ abstract class Module extends PSModule {
                 'delay'     => $invite_delay,
                 'language'      => str_replace('-', '_', $order['language_code']),
                 'customer_name' => $order['firstname'] . ' ' . $order['lastname'],
-                'phone_numbers' => $phones,
                 'order_total' => $order['total_paid'],
                 'client'    => 'prestashop',
                 'platform_version' => _PS_VERSION_,
@@ -412,8 +422,9 @@ abstract class Module extends PSModule {
                             'code' => $api_key,
                         ]);
 
-                    $response = $this->request($url, [
-                        CURLOPT_POSTFIELDS => $post,
+                    $response = $this->request($url, 'POST', [
+                        CURLOPT_POSTFIELDS => http_build_query($post),
+                        CURLOPT_TIMEOUT => 10,
                     ]);
 
                     $data = json_decode($response, true);
@@ -426,7 +437,7 @@ abstract class Module extends PSModule {
                         throw new RuntimeException($data['message']);
                     }
 
-                    $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . (int) $order['id_order']);
+                    $this->markInviteAsSent($order['id_order']);
 
                     PrestaShopLogger::addLog(sprintf(
                         '%s: Requested invitation for order %s',
@@ -469,7 +480,7 @@ abstract class Module extends PSModule {
         return str_replace('http://', Tools::getShopProtocol(), $context->link->getImageLink($product->link_rewrite, $img['id_image'], 'home_default'));
     }
 
-    public function hookBackofficeTop() {
+    public function hookDisplayBackOfficeTop() {
         foreach (Shop::getCompleteListOfShopsID() as $shop) {
             $this->sendInvites($shop);
         }
@@ -497,9 +508,7 @@ abstract class Module extends PSModule {
             Configuration::updateValue($this->getConfigName('SHOP_ID'), trim($shop_id));
             Configuration::updateValue($this->getConfigName('API_KEY'), trim($api_key));
             Configuration::updateValue($this->getConfigName('SYNC_PROD_REVIEWS'), (bool) Tools::getValue('sync_prod_reviews'));
-            if (Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
-                $this->sendSyncUrl();
-            }
+            $this->sendSyncUrl();
 
             Configuration::updateValue(
                 $this->getConfigName('INVITE'),
@@ -533,9 +542,10 @@ abstract class Module extends PSModule {
                 !!Tools::getValue('limit_order_data')
             );
 
-            $this->registerHook('header');
-            $this->registerHook('footer');
-            $this->registerHook('backOfficeTop');
+            $this->registerHook('displayHeader');
+            $this->registerHook('displayFooter');
+            $this->registerHook('displayOrderConfirmation');
+            $this->registerHook('displayBackOfficeTop');
 
             if (sizeof($errors) == 0) {
                 $success = true;
@@ -612,30 +622,22 @@ abstract class Module extends PSModule {
         return $this->getTableName($this->getName() . '_' . $name);
     }
 
-    /**
-     * @param string $url
-     * @param array $options
-     * @return string
-     */
-    private function request($url, $options = []) {
-        $ch = curl_init($url);
-        if (!$ch) {
-            throw new RuntimeException('curl_init failed');
-        }
-        $options += [
+    private function request(string $url, string $method, array $options = []): string {
+        $default_options = [
+            CURLOPT_URL => $url,
             CURLOPT_FAILONERROR => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_CUSTOMREQUEST => $method,
         ];
-        if (!curl_setopt_array($ch, $options)) {
-            throw new RuntimeException('curl_setopt_array failed');
-        }
+        $ch = $this->getCurl($default_options + $options);
+
         $response = curl_exec($ch);
         if ($response === false) {
             throw new RuntimeException(sprintf(
                 'curl: (%s) %s',
                 curl_errno($ch),
-                curl_error($ch)
+                curl_error($ch),
             ));
         }
         return $response;
@@ -648,5 +650,54 @@ abstract class Module extends PSModule {
             require __DIR__ . '/../templates/' . $__template . '.php';
             return ob_get_clean();
         })();
+    }
+
+    private function getCurl(array $options) {
+        if (!$this->curl) {
+            $this->curl = curl_init();
+        } else {
+            curl_reset($this->curl);
+        }
+
+        if (!curl_setopt_array($this->curl, $options)) {
+            throw new RuntimeException('curl_setopt_array failed');
+        }
+
+        if (!$this->curl) {
+            throw new RuntimeException('curl_init failed');
+        }
+
+        return $this->curl;
+    }
+
+    private function hasConsent(int $order_id, int $ps_shop_id): bool {
+        $url = sprintf(
+            self::CONSENT_URL,
+            $this->getDashboardDomain(),
+            http_build_query([
+                'id' => Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
+                'code' => Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
+                'orderNumber' => $order_id,
+            ]),
+        );
+
+        try {
+            $response_data = json_decode($this->request($url, 'GET'), true);
+        } catch (\Exception $e) {
+            $message = sprintf(
+                'Checking consent for order %s failed: %s',
+                $order_id,
+                $e->getMessage(),
+            );
+            PrestaShopLogger::addLog($message);
+            return false;
+        }
+
+        return $response_data['has_consent'] ?? false;
+    }
+
+    private function markInviteAsSent(int $order_id): void {
+        $db = Db::getInstance();
+        $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . $order_id);
     }
 }

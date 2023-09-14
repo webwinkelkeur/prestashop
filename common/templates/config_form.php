@@ -78,6 +78,12 @@ if (!defined('_PS_VERSION_')) {
             <input type="radio" name="invite" id="webwinkelkeur-invite-on" value="1" <?= $module->getConfigValue('INVITE') == 1 ? 'checked' : ''; ?>>
             <label class="t" for="webwinkelkeur-invite-on"><?= $module->l('Yes, for every order', 'config_form'); ?></label><br>
 
+            <label class="t" for="webwinkelkeur-consent-flow">
+                <img src="../img/admin/enabled.gif" alt="">
+            </label>
+            <input type="radio" name="invite" id="webwinkelkeur-consent-flow" value="3" <?= $module->getConfigValue('INVITE') == 3 ? 'checked' : ''; ?>>
+            <label class="t" for="webwinkelkeur-consent-flow"><?= $module->l('Yes, pop-up after purchase at "thank you" page.', 'config_form'); ?></label><br>
+
             <label class="t" for="webwinkelkeur-invite-first">
                 <img src="../img/admin/enabled.gif" alt="">
             </label>

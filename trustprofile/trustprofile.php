@@ -12,6 +12,10 @@ class TrustProfile extends Valued\PrestaShop\Module {
     }
 
     protected function getDashboardDomain() {
-        return 'dashboard.trustprofile.io';
+        return 'dashboard.trustprofile.com';
+    }
+
+    protected function getSystemKey() {
+        return 'trustprofile';
     }
 }
