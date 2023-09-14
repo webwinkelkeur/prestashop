@@ -366,7 +366,7 @@ abstract class Module extends PSModule {
             ) {
                 $this->markInviteAsSent($order['id_order']);
                 PrestaShopLogger::addLog(
-                    sprintf('Invitation was not created for order (%s) as customer did not give a consent', $order['id_order']),
+                    sprintf('Invitation was not created for order (%s) as customer did not consent', $order['id_order']),
                 );
                 return;
             }
