@@ -164,7 +164,7 @@ abstract class Module extends PSModule {
 
     public function hookDisplayOrderConfirmation($params) {
         $order = $params['order'];
-        $customer = new \Customer((int) ($order->id_customer));
+        $customer = new \Customer((int) $order->id_customer);
         $ps_shop_id = $order->id_shop;
         $webshop_id = Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id);
 
