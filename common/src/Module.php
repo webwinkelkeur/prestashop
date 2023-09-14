@@ -622,12 +622,6 @@ abstract class Module extends PSModule {
         return $this->getTableName($this->getName() . '_' . $name);
     }
 
-    /**
-     * @param string $url
-     * @param string $method
-     * @param array $options
-     * @return string
-     */
     private function request(string $url, string $method, array $options = []): string {
         $default_options = [
             CURLOPT_URL => $url,
