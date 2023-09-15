@@ -142,7 +142,7 @@ if (!defined('_PS_VERSION_')) {
             <label class="t" for="webwinkelkeur-rich-snippet-on">
                 <img src="../img/admin/enabled.gif" alt="">
             </label>
-            <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-on" value="1" <?= $module->getConfigValue('RICH_SNIPPET') ? 'checked' : ''; ?>>
+            <input type="radio" name="rich_snippet" id="webwinkelkeur-rich-snippet-on" value="1" <?= $module->getConfigValue('RICH_SNIPPET', true) ? 'checked' : ''; ?>>
             <label class="t" for="webwinkelkeur-rich-snippet-on"><?= $module->l('Yes', 'config_form'); ?></label>
 
             <label class="t" for="webwinkelkeur-rich-snippet-off">
