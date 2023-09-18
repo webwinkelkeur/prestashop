@@ -366,7 +366,7 @@ abstract class Module extends PSModule {
             ) {
                 $this->markInviteAsSent($order['id_order']);
                 PrestaShopLogger::addLog(
-                    sprintf('Invitation was not created for order (%s) as customer did not consent', $order['id_order']),
+                    sprintf('Invitation was not created for order (%s) as customer did not consent', $order['id_order'])
                 );
                 return;
             }
@@ -637,7 +637,7 @@ abstract class Module extends PSModule {
             throw new RuntimeException(sprintf(
                 'curl: (%s) %s',
                 curl_errno($ch),
-                curl_error($ch),
+                curl_error($ch)
             ));
         }
         return $response;
@@ -678,7 +678,7 @@ abstract class Module extends PSModule {
                 'id' => Configuration::get($this->getConfigName('SHOP_ID'), null, null, $ps_shop_id),
                 'code' => Configuration::get($this->getConfigName('API_KEY'), null, null, $ps_shop_id),
                 'orderNumber' => $order_id,
-            ]),
+            ])
         );
 
         try {
@@ -687,7 +687,7 @@ abstract class Module extends PSModule {
             $message = sprintf(
                 'Checking consent for order %s failed: %s',
                 $order_id,
-                $e->getMessage(),
+                $e->getMessage()
             );
             PrestaShopLogger::addLog($message);
             return false;
