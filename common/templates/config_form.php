@@ -202,3 +202,4 @@ function hasProductCommentsModule() {
     return $moduleManager->isInstalled('productcomments');
 }
 ?>
+
