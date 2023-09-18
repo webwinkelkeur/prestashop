@@ -1,7 +1,6 @@
 <?php
 
 use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManager;
-use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -111,16 +110,15 @@ if (!defined('_PS_VERSION_')) {
                         type="checkbox"
                         name="sync_prod_reviews"
                         <?= $module->getConfigValue('SYNC_PROD_REVIEWS') ? 'checked ' : ''; ?>
-                        <?= !moduleManager()->isInstalled('productcomments') || !moduleManager()->isEnabled('productcomments') ? 'disabled' : '' ?>
                 />
                 <?= $module->l('Sync product reviews to PrestaShop', 'config_form') ?>
             </label>
 
-            <?php if (moduleManager()->isEnabled('productcomments')): ?>
+            <?php if (hasProductCommentsModule()): ?>
                 <p class="preference_description">
                     <?= sprintf($module->l('Automatically display product reviews collected using %s on your PrestaShop store', 'config_form'), $module->getDisplayName()); ?>
                 </p>
-            <?php elseif(!moduleManager()->isInstalled('productcomments')): ?>
+            <?php elseif(!hasProductCommentsModule()): ?>
                 <div class="custom_alert_danger">Please install the <a href="https://addons.prestashop.com/en/undownloadable/9144-product-comments.html">Product Comments</a> module to use this option.</div>
             <?php else: ?>
                 <div class="custom_alert_warning">Please enable the Product Comments module to use this option.</div>
@@ -195,8 +193,13 @@ if (!defined('_PS_VERSION_')) {
 <?php endif; ?>
 
 <?php
-function moduleManager() {
-    $moduleManagerBuilder = ModuleManagerBuilder::getInstance();
-    return $moduleManagerBuilder->build();
+function hasProductCommentsModule() {
+    if (!class_exists('PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder')) {
+        return false;
+    }
+    $moduleManagerBuilder = PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder::getInstance();
+    $moduleManager = $moduleManagerBuilder->build();
+    return $moduleManager->isInstalled('productcomments');
 }
 ?>
+
