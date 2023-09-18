@@ -94,7 +94,7 @@ abstract class Module extends PSModule {
         return true;
     }
 
-    private function sendSyncUrl(): void {
+    private function sendSyncUrl() {
         if (!Configuration::get($this->getConfigName('SYNC_PROD_REVIEWS'))) {
             return;
         }
@@ -696,7 +696,7 @@ abstract class Module extends PSModule {
         return $response_data['has_consent'] ?? false;
     }
 
-    private function markInviteAsSent(int $order_id): void {
+    private function markInviteAsSent(int $order_id) {
         $db = Db::getInstance();
         $db->execute("UPDATE `{$this->getTableName('orders')}` SET {$this->getPluginColumnName('invite_sent')} = 1 WHERE id_order = " . $order_id);
     }
