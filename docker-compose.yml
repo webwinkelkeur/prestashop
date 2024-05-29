@@ -1,30 +1,27 @@
-version: '2'
+version: '3'
 services:
-  mariadb:
-    image: docker.io/bitnami/mariadb:10.6
+  mysql:
+    container_name: prestashop-mysql
+    image: mysql:8
+    platform: linux/x86_64
     environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-      - MARIADB_USER=bn_prestashop
-      - MARIADB_DATABASE=bitnami_prestashop
-    volumes:
-      - 'mariadb_data:/bitnami/mariadb'
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: prestashop
+    networks:
+      - prestashop_network
   prestashop:
-    image: docker.io/bitnami/prestashop:8
+    container_name: prestashop
+    image: prestashop/prestashop:latest
+    platform: linux/x86_64
     ports:
-      - '19966:8080'
-      - '19967:8443'
+      - 19966:80
     environment:
-      - PRESTASHOP_HOST=localhost
-      - PRESTASHOP_DATABASE_HOST=mariadb
-      - PRESTASHOP_DATABASE_PORT_NUMBER=3306
-      - PRESTASHOP_DATABASE_USER=bn_prestashop
-      - PRESTASHOP_DATABASE_NAME=bitnami_prestashop
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-    depends_on:
-      - mariadb
-volumes:
-  mariadb_data:
-    driver: local
-
+      DB_SERVER: prestashop-mysql
+      DB_NAME: prestashop
+      DB_USER: root
+      DB_PASSWD: admin
+      PS_DOMAIN: localhost:19966
+    networks:
+      - prestashop_network
+networks:
+  prestashop_network:
