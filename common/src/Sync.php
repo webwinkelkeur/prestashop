@@ -12,10 +12,6 @@ use PrestaShop\PrestaShop\Adapter\Validate;
 use Product;
 
 class Sync extends ModuleFrontController {
-
-    /** @var bool */
-    public $ajax;
-
     public function postProcess(): void {
         $request_data = trim(file_get_contents('php://input'));
         if (!$request_data) {
@@ -48,7 +44,6 @@ class Sync extends ModuleFrontController {
     }
 
     private function syncProductReview(array $product_review): void {
-        $this->ajax = 1;
         /** @var EntityManagerInterface $entityManager */
         $entity_manager = $this->container->get('doctrine.orm.entity_manager');
         $date_add = DateTime::createFromFormat('Y-m-d H:i:s', $product_review['created']);
@@ -79,7 +74,9 @@ class Sync extends ModuleFrontController {
             }
             $entity_manager->flush();
             $this->logReviewSync($product_review['id'] ?? $product_comment->getId(), $product_review['deleted']);
-            $this->ajaxRender(json_encode(['review_id' => $product_comment->getId()]));
+
+            header('Content-Type: application/json');
+            die(json_encode(['review_id' => $product_comment->getId()]));
     }
 
     private function getCustomerIdByEmail(string $email): ?int {
