@@ -6,3 +6,5 @@ config.xml
 /www
 /html
 /db
+/mysql_data
+/prestashop_data
